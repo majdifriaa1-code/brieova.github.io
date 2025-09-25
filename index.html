@@ -420,13 +420,18 @@
 
         // Trouver ou créer un utilisateur
 async function findUserByEmail(email) {
-    const result = await callN8n('findUserByEmail', { email });
-    if (result && result.id && result.fields) {
-        userRecord = result; // <-- PAS result[0]
-    } else {
-        throw new Error("Utilisateur non trouvé dans Airtable.");
-    }
-}
+            // n8n sends a single user OBJECT. This code now correctly handles that.
+            const record = await callN8n('findUserByEmail', { email });
+
+            // We check if the received object is valid and has an 'id' property.
+            if (record && record.id) {
+                userRecord = record; // Assign the object directly.
+            } else {
+                // This will now only run if n8n truly didn't find the user.
+                throw new Error("User record not found in Airtable.");
+            }
+        }
+        
 
         // Ajouter un lien
         async function addLink(fieldName, inputId) {
@@ -899,6 +904,7 @@ async function findUserByEmail(email) {
     </script>
 </body>
 </html>
+
 
 
 
