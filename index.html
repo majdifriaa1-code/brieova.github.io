@@ -419,20 +419,21 @@
         // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N ---
 
         // Trouver ou créer un utilisateur
-async function findUserByEmail(email) {
-    const result = await callN8n('findUserByEmail', { email });
-    // Le nœud "Search records" d'Airtable dans n8n retourne toujours un tableau.
-    // On vérifie qu'il y a au moins un élément.
-    if (Array.isArray(result) && result.length > 0) {
-        userRecord = result[0]; // Prendre le premier élément du tableau
-        // Vérifiez que l'élément a bien un id et des fields
-        if (!userRecord || !userRecord.id || !userRecord.fields) {
-            throw new Error("L'enregistrement utilisateur est invalide.");
+        async function findUserByEmail(email) {
+            const result = await callN8n('findUserByEmail', { email });
+            // Le nœud "Search records" d'Airtable dans n8n retourne toujours un tableau.
+            // On vérifie qu'il y a au moins un élément.
+            if (Array.isArray(result) && result.length > 0) {
+                userRecord = result[0];
+                // Vérifier que l'élément a bien un id et des fields
+                if (!userRecord || !userRecord.id || !userRecord.fields) {
+                    throw new Error("L'enregistrement utilisateur est invalide.");
+                }
+            } else {
+                throw new Error("Utilisateur non trouvé dans Airtable.");
+            }
         }
-    } else {
-        throw new Error("Utilisateur non trouvé dans Airtable.");
-    }
-}
+
         // Ajouter un lien
         async function addLink(fieldName, inputId) {
             if (!userRecord) return;
@@ -477,7 +478,12 @@ async function findUserByEmail(email) {
 
         // Mettre à jour le tableau des sources
         function updateSourcesTable() {
-            if (!userRecord) return;
+            // Vérifiez que userRecord est défini
+            if (!userRecord || !userRecord.fields) {
+                console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour le tableau.");
+                return;
+            }
+
             const tableBody = document.getElementById('sources-table');
             tableBody.innerHTML = '';
             const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
@@ -503,7 +509,12 @@ async function findUserByEmail(email) {
 
         // Mettre à jour la limite d'utilisation
         function updateUsageLimit() {
-            if (!userRecord) return;
+            // Vérifiez que userRecord est défini
+            if (!userRecord || !userRecord.fields) {
+                console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour la limite.");
+                return;
+            }
+
             const usageElement = document.getElementById('usage-limit');
             const debriefButton = document.getElementById('start-debrief-button');
 
@@ -592,6 +603,13 @@ async function findUserByEmail(email) {
         }
 
         function showDashboard() {
+            // Vérifiez que userRecord est défini
+            if (!userRecord || !userRecord.fields) {
+                console.error("Erreur : userRecord est undefined.");
+                alert("Erreur interne. Veuillez vous reconnecter.");
+                return;
+            }
+
             document.getElementById('loading-indicator').classList.add('hidden');
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
@@ -887,5 +905,3 @@ async function findUserByEmail(email) {
     </script>
 </body>
 </html>
-
-
