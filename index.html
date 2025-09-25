@@ -425,7 +425,7 @@
             // On vérifie qu'il y a au moins un élément.
             if (Array.isArray(result) && result.length > 0) {
                 userRecord = result[0];
-                // Vérifier que l'objet a bien un id et des fields
+                // Vérifier que l'élément a bien un id et des fields
                 if (!userRecord || !userRecord.id || !userRecord.fields) {
                     throw new Error("L'enregistrement utilisateur est invalide.");
                 }
