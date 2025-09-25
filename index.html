@@ -419,7 +419,7 @@
         // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N ---
 
         // Trouver ou créer un utilisateur
-async function findUserByEmail(email) {
+      async function findUserByEmail(email) {
     const result = await callN8n('findUserByEmail', { email });
     // Le nœud "Search records" d'Airtable dans n8n retourne toujours un tableau.
     // On vérifie qu'il y a au moins un élément.
@@ -433,6 +433,7 @@ async function findUserByEmail(email) {
         throw new Error("Utilisateur non trouvé dans Airtable.");
     }
 }
+
         // Ajouter un lien
         async function addLink(fieldName, inputId) {
             if (!userRecord) return;
@@ -476,66 +477,67 @@ async function findUserByEmail(email) {
         }
 
         // Mettre à jour le tableau des sources
-       function updateSourcesTable() {
-    // Vérifiez que userRecord est défini
-    if (!userRecord || !userRecord.fields) {
-        console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour le tableau.");
-        return;
-    }
+        function updateSourcesTable() {
+            // Vérifiez que userRecord est défini
+            if (!userRecord || !userRecord.fields) {
+                console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour le tableau.");
+                return;
+            }
 
-    const tableBody = document.getElementById('sources-table');
-    tableBody.innerHTML = '';
-    const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
-    fieldsToShow.forEach(fieldName => {
-        const row = document.createElement('tr');
-        const linksArray = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
-        let linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
-        if (linksArray.length > 0) {
-            linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
-            linksArray.forEach(link => {
-                linksHtml += `<span>${link}</span><br/>`;
+            const tableBody = document.getElementById('sources-table');
+            tableBody.innerHTML = '';
+            const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
+            fieldsToShow.forEach(fieldName => {
+                const row = document.createElement('tr');
+                const linksArray = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+                let linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
+                if (linksArray.length > 0) {
+                    linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
+                    linksArray.forEach(link => {
+                        linksHtml += `<span>${link}</span><br/>`;
+                    });
+                    linksHtml += '</div>';
+                }
+                row.innerHTML = `
+                    <td class="table-cell font-semibold text-gray-800">${fieldName.replace('Links', '').replace('RSS', '')}</td>
+                    <td class="table-cell">${linksHtml}</td>
+                    <td class="table-cell"><button onclick="clearLinks('${fieldName}')" class="btn btn-secondary text-sm">Vider</button></td>
+                `;
+                tableBody.appendChild(row);
             });
-            linksHtml += '</div>';
         }
-        row.innerHTML = `
-            <td class="table-cell font-semibold text-gray-800">${fieldName.replace('Links', '').replace('RSS', '')}</td>
-            <td class="table-cell">${linksHtml}</td>
-            <td class="table-cell"><button onclick="clearLinks('${fieldName}')" class="btn btn-secondary text-sm">Vider</button></td>
-        `;
-        tableBody.appendChild(row);
-    });
-}
 
         // Mettre à jour la limite d'utilisation
-       function updateUsageLimit() {
-    // Vérifiez que userRecord est défini
-    if (!userRecord || !userRecord.fields) {
-        console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour la limite.");
-        return;
-    }
+        function updateUsageLimit() {
+            // Vérifiez que userRecord est défini
+            if (!userRecord || !userRecord.fields) {
+                console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour la limite.");
+                return;
+            }
 
-    const usageElement = document.getElementById('usage-limit');
-    const debriefButton = document.getElementById('start-debrief-button');
+            const usageElement = document.getElementById('usage-limit');
+            const debriefButton = document.getElementById('start-debrief-button');
 
-    if (userRecord.fields.Plan === 'Free') {
-        const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
-        usageElement.textContent = `Offre Gratuite : Il vous reste ${remaining} débrief(s).`;
-        if (remaining <= 0) {
-            debriefButton.disabled = true;
-            debriefButton.textContent = 'Limite atteinte';
-            debriefButton.classList.remove('btn-primary');
-        } else {
-            debriefButton.disabled = false;
-            debriefButton.textContent = 'Lancer le Débrief';
-            debriefButton.classList.add('btn-primary');
+            if (userRecord.fields.Plan === 'Free') {
+                const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
+                usageElement.textContent = `Offre Gratuite : Il vous reste ${remaining} débrief(s).`;
+                if (remaining <= 0) {
+                    debriefButton.disabled = true;
+                    debriefButton.textContent = 'Limite atteinte';
+                    debriefButton.classList.remove('btn-primary');
+                } else {
+                    debriefButton.disabled = false;
+                    debriefButton.textContent = 'Lancer le Débrief';
+                    debriefButton.classList.add('btn-primary');
+                }
+            } else {
+                usageElement.textContent = 'Plan Premium : Profitez de débriefs illimités !';
+                debriefButton.disabled = false;
+                debriefButton.textContent = 'Lancer le Débrief';
+                debriefButton.classList.add('btn-primary');
+            }
         }
-    } else {
-        usageElement.textContent = 'Plan Premium : Profitez de débriefs illimités !';
-        debriefButton.disabled = false;
-        debriefButton.textContent = 'Lancer le Débrief';
-        debriefButton.classList.add('btn-primary');
-    }
-}
+
         // Lancer le débrief
         async function startDebrief() {
             if (!userRecord) return;
@@ -600,49 +602,49 @@ async function findUserByEmail(email) {
             document.title = 'BRIOVA - Connexion';
         }
 
-       function showDashboard() {
-    document.getElementById('loading-indicator').classList.add('hidden');
-    document.getElementById('auth-section').classList.add('hidden');
-    document.getElementById('dashboard-section').classList.remove('hidden');
-    document.title = `BRIOVA - Dashboard de ${firebaseUser.email}`;
+        function showDashboard() {
+            // Vérifiez que userRecord est défini
+            if (!userRecord || !userRecord.fields) {
+                console.error("Erreur : userRecord est undefined.");
+                alert("Erreur interne. Veuillez vous reconnecter.");
+                return;
+            }
 
-    // Vérifiez que userRecord est défini
-    if (!userRecord) {
-        console.error("Erreur : userRecord est undefined.");
-        alert("Erreur interne. Veuillez vous reconnecter.");
-        return;
-    }
+            document.getElementById('loading-indicator').classList.add('hidden');
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.title = `BRIOVA - Dashboard de ${firebaseUser.email}`;
 
-    updateSourcesTable();
-    updateUsageLimit();
+            updateSourcesTable();
+            updateUsageLimit();
 
-    // Afficher l'email de l'utilisateur
-    document.getElementById('user-email').textContent = firebaseUser.email;
+            // Afficher l'email de l'utilisateur
+            document.getElementById('user-email').textContent = firebaseUser.email;
 
-    // Afficher le statut de l'utilisateur
-    const userStatusElement = document.getElementById('user-status');
-    const status = userRecord.fields.Status || 'Inconnu';
-    let bgColorClass = 'bg-gray-100 text-gray-800';
-    if (status === 'Beta') {
-        bgColorClass = 'bg-blue-100 text-blue-800';
-    } else if (status === 'Waitlist') {
-        bgColorClass = 'bg-purple-100 text-purple-800';
-    }
-    userStatusElement.className = `status-badge ${bgColorClass}`;
-    userStatusElement.textContent = status;
+            // Afficher le statut de l'utilisateur
+            const userStatusElement = document.getElementById('user-status');
+            const status = userRecord.fields.Status || 'Inconnu';
+            let bgColorClass = 'bg-gray-100 text-gray-800';
+            if (status === 'Beta') {
+                bgColorClass = 'bg-blue-100 text-blue-800';
+            } else if (status === 'Waitlist') {
+                bgColorClass = 'bg-purple-100 text-purple-800';
+            }
+            userStatusElement.className = `status-badge ${bgColorClass}`;
+            userStatusElement.textContent = status;
 
-    // Afficher le nombre de debriefs restants
-    const debriefsRemainingElement = document.getElementById('debriefs-remaining');
-    const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
-    let debriefsBgColorClass = 'bg-green-100 text-green-800';
-    if (remaining <= 0) {
-        debriefsBgColorClass = 'bg-red-100 text-red-800';
-    } else if (remaining <= 2) {
-        debriefsBgColorClass = 'bg-yellow-100 text-yellow-800';
-    }
-    debriefsRemainingElement.className = `status-badge ${debriefsBgColorClass}`;
-    debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
-}
+            // Afficher le nombre de debriefs restants
+            const debriefsRemainingElement = document.getElementById('debriefs-remaining');
+            const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
+            let debriefsBgColorClass = 'bg-green-100 text-green-800';
+            if (remaining <= 0) {
+                debriefsBgColorClass = 'bg-red-100 text-red-800';
+            } else if (remaining <= 2) {
+                debriefsBgColorClass = 'bg-yellow-100 text-yellow-800';
+            }
+            debriefsRemainingElement.className = `status-badge ${debriefsBgColorClass}`;
+            debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
+        }
 
         // --- GESTION DU MODAL D'INSCRIPTION ---
         document.getElementById('show-signup-modal-button').addEventListener('click', () => {
@@ -851,25 +853,22 @@ async function findUserByEmail(email) {
 
         // --- GESTION DE LA PERSISTANCE ---
         auth.onAuthStateChanged(async (user) => {
-    isCheckingAuth = false;
-    document.getElementById('loading-indicator').classList.remove('hidden');
+            isCheckingAuth = false;
+            document.getElementById('loading-indicator').classList.remove('hidden');
 
-    if (user) {
-        firebaseUser = user;
-        try {
-            await findUserByEmail(user.email); // Attendez que la recherche soit terminée
-            showDashboard(); // Appelez showDashboard seulement après que findUserByEmail ait réussi
-        } catch (error) {
-            console.error("Erreur lors de la récupération des données Airtable:", error);
-            alert("Erreur de connexion à la base de données. Veuillez vous reconnecter.");
-            await handleLogout();
-        }
-    } else {
-        showAuthSection();
-    }
-
-    document.getElementById('loading-indicator').classList.add('hidden');
-});
+            if (user) {
+                firebaseUser = user;
+                try {
+                    await findUserByEmail(user.email);
+                    showDashboard();
+                } catch (error) {
+                    console.error("Erreur lors de la récupération des données Airtable:", error);
+                    alert("Erreur de connexion à la base de données. Veuillez vous reconnecter.");
+                    await handleLogout();
+                }
+            } else {
+                showAuthSection();
+            }
 
             document.getElementById('loading-indicator').classList.add('hidden');
         });
@@ -906,4 +905,3 @@ async function findUserByEmail(email) {
     </script>
 </body>
 </html>
-
