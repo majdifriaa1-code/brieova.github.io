@@ -394,51 +394,80 @@
         let isCheckingAuth = true;
 
         // --- FONCTION UTILITAIRE POUR APPELER LE WEBHOOK N8N ---
-        async function callN8n(action, data = {}) {
-            try {
-                const response = await fetch(USER_ACTIONS_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ action, ...data })
-                });
+      async function callN8n(action, data = {}) {
+    try {
+        const response = await fetch(USER_ACTIONS_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action, ...data })
+        });
 
-                if (!response.ok) {
-                    throw new Error(`Erreur du serveur n8n: ${response.status}`);
-                }
-
-                return await response.json();
-
-            } catch (error) {
-                console.error("Erreur lors de l'appel au webhook n8n:", error);
-                throw new Error("Une erreur réseau ou serveur est survenue. Veuillez réessayer.");
-            }
+        // Vérifier si la réponse est OK
+        if (!response.ok) {
+            throw new Error(`Erreur du serveur n8n: ${response.status} - ${response.statusText}`);
         }
+
+        // Tenter de parser en JSON
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseError) {
+            // Si le parsing JSON échoue, créer un objet d'erreur personnalisé
+            const text = await response.text(); // Récupérer le contenu brut
+            throw new Error(`Réponse invalide du serveur n8n (non-JSON): ${text.substring(0, 200)}...`);
+        }
+
+        return result;
+
+    } catch (error) {
+        console.error("Erreur lors de l'appel au webhook n8n:", error);
+        throw new Error(`Une erreur réseau ou serveur est survenue. Détails : ${error.message}`);
+    }
+}
 
         // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N ---
 
         // Trouver ou créer un utilisateur
 async function findUserByEmail(email) {
-    const result = await callN8n('findUserByEmail', { email });
-    // Vérifie que c'est un objet avec un 'id' et un champ 'Email'
-    if (result && result.id && result.Email) {
-        // Simule la structure Airtable attendue par le reste du code
-        userRecord = {
-            id: result.id,
-            fields: {
-                Email: result.Email,
-                Status: result.Status || 'Inconnu',
-                "Article RSS Links": result["Article RSS Links"] || "",
-                "YouTube Links": result["YouTube Links"] || "",
-                "Podcast RSS Links": result["Podcast RSS Links"] || "",
-                "Debriefs Restants": result["Debriefs Restants"] || 0,
-                Plan: result.Plan || "Free",
-                // Ajoute ici tous les autres champs dont tu as besoin
-            }
-        };
-    } else {
-        throw new Error("Utilisateur non trouvé dans Airtable.");
+    try {
+        const result = await callN8n('findUserByEmail', { email });
+
+        // Si on trouve l'utilisateur, on le charge
+        if (result && result.id && result.Email) {
+            userRecord = {
+                id: result.id,
+                fields: {
+                    Email: result.Email,
+                    Status: result.Status || 'Inconnu',
+                    "Article RSS Links": result["Article RSS Links"] || "",
+                    "YouTube Links": result["YouTube Links"] || "",
+                    "Podcast RSS Links": result["Podcast RSS Links"] || "",
+                    "Debriefs Restants": result["Debriefs Restants"] || 0,
+                    Plan: result.Plan || "Free",
+                }
+            };
+        } else {
+            // ❗️ Si l'utilisateur n'existe pas, on le crée via un nouvel appel n8n
+            console.log("Utilisateur non trouvé, création...");
+            const createdUser = await callN8n('createUser', { email }); // ⚠️ Vous devez créer cette action dans n8n !
+            userRecord = {
+                id: createdUser.id,
+                fields: {
+                    Email: createdUser.Email,
+                    Status: createdUser.Status || 'Inconnu',
+                    "Article RSS Links": "",
+                    "YouTube Links": "",
+                    "Podcast RSS Links": "",
+                    "Debriefs Restants": MAX_DEBRIEFS_FREE, // Ou 0, selon votre logique
+                    Plan: "Free",
+                }
+            };
+        }
+    } catch (error) {
+        console.error("Erreur lors de la recherche/création de l'utilisateur :", error);
+        throw new Error(`Impossible de charger ou créer votre profil. Veuillez contacter le support. Détails : ${error.message}`);
     }
 }
         
@@ -712,16 +741,20 @@ async function findUserByEmail(email) {
             } catch (error) {
                 console.error("Erreur lors de la création du compte:", error);
                 let message = "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.";
-                if (error.code === 'auth/email-already-in-use') {
+                if (error.code === 'auth/email-already-in-use') 
+                {
                     message = "Un compte existe déjà avec cette adresse email. Veuillez vous connecter.";
-                } else if (error.code === 'auth/invalid-email') {
+                } else if (error.code === 'auth/invalid-email') 
+                {
                     message = "L'adresse email est invalide.";
-                } else if (error.code === 'auth/weak-password') {
+                } else if (error.code === 'auth/weak-password') 
+                {
                     message = "Le mot de passe est trop faible (min. 6 caractères).";
                 }
                 errorElement.textContent = message;
                 errorElement.classList.remove('hidden');
-            } finally {
+            }
+            finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Créer mon compte';
             }
@@ -778,13 +811,21 @@ async function findUserByEmail(email) {
                 document.getElementById('profile-modal').classList.add('hidden');
 
             } catch (error) {
-                console.error("Erreur lors de la mise à jour du mot de passe:", error);
-                let message = "Une erreur est survenue lors de la mise à jour du mot de passe.";
-                if (error.code === 'auth/wrong-password') {
-                    message = "Le mot de passe actuel que vous avez saisi est incorrect.";
-                } else if (error.code === 'auth/invalid-credential') {
-                    message = "Les informations d'identification fournies sont incorrectes ou ont expiré.";
-                }
+                  console.error("Erreur lors de la création du compte:", error);
+    let message = "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.";
+    
+    // ✅ Ajoutez cette ligne pour utiliser le message d'erreur spécifique
+    if (error.message) {
+        message = error.message; // Utilisez le message d'erreur fourni par callN8n ou findUserByEmail
+    }
+
+    if (error.code === 'auth/email-already-in-use') {
+        message = "Un compte existe déjà avec cette adresse email. Veuillez vous connecter.";
+    } else if (error.code === 'auth/invalid-email') {
+        message = "L'adresse email est invalide.";
+    } else if (error.code === 'auth/weak-password') {
+        message = "Le mot de passe est trop faible (min. 6 caractères).";
+    }
                 alert(message);
             }
         });
@@ -914,6 +955,7 @@ async function findUserByEmail(email) {
     </script>
 </body>
 </html>
+
 
 
 
