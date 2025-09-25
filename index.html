@@ -421,9 +421,8 @@
         // Trouver ou créer un utilisateur
 async function findUserByEmail(email) {
     const result = await callN8n('findUserByEmail', { email });
-    // Le webhook renvoie maintenant un OBJET avec 'id' et 'fields'
     if (result && result.id && result.fields) {
-        userRecord = result;
+        userRecord = result; // <-- PAS result[0]
     } else {
         throw new Error("Utilisateur non trouvé dans Airtable.");
     }
@@ -900,6 +899,7 @@ async function findUserByEmail(email) {
     </script>
 </body>
 </html>
+
 
 
 
