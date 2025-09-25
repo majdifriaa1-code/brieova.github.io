@@ -99,19 +99,76 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        @media (max-width: 768px) {
-            .container { max-width: 100%; padding: 1rem; }
-            .card { padding: 1.5rem; margin-bottom: 1rem; }
-            .input-field { padding: 0.5rem 0.75rem; }
-            .btn { padding: 0.5rem 1rem; font-size: 0.875rem; }
-            .flex.items-center.justify-between { flex-direction: column; gap: 1rem; text-align: center; }
-            .user-panel { flex-wrap: wrap; justify-content: center; gap: 0.5rem; padding: 0.5rem; }
-            .user-panel a, .user-panel button { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
-            .table-cell { padding: 0.5rem; font-size: 0.875rem; }
-            table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .modal-content { padding: 1.5rem; margin: 1rem; }
-            .loader-spinner { width: 30px; height: 30px; }
-        }
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        padding: 1rem;
+    }
+
+    .card {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .input-field {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    /* Adaptation de l'en-tête */
+    .flex.items-center.justify-between {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .user-panel {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .user-panel a, .user-panel button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* Tableau responsive */
+    .table-cell {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Modals */
+    .modal-content {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    /* Loader */
+    .loader-spinner {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+
+
+
+
     </style>
 </head>
 <body class="bg-gray-50">
@@ -119,14 +176,20 @@
     <div id="loading-indicator" class="loader">
         <div class="loader-spinner"></div>
     </div>
+
     <div id="app" class="container">
-        <!-- Section de Connexion Firebase -->
+        <!-- Section de Connexion Firebase (Modernisée) -->
         <div id="auth-section" class="flex items-center justify-center min-h-screen">
             <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg">
+                <!-- Logo -->
                 <div class="text-center">
                     <img src="https://cdn.prod.website-files.com/68b9f8920957ffd144ee6dd0/68d2e687122a4d05e0c8b291_Logo%20site%20web%20horiz.png" alt="Brieova Logo" class="h-12 mx-auto">
                 </div>
+
+                <!-- Titre -->
                 <h2 class="text-2xl font-bold text-center text-gray-800">Se connecter à BRIOVA</h2>
+
+                <!-- Formulaire -->
                 <div class="space-y-6">
                     <div>
                         <label for="auth-email" class="block text-sm font-medium text-gray-700">Adresse email</label>
@@ -140,51 +203,124 @@
                     <button id="login-button" class="w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Se Connecter</button>
                     <button id="show-signup-modal-button" class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Créer un compte</button>
                     <div class="text-center mt-4">
-                        <button id="show-forgot-password-modal" class="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none">Mot de passe oublié ?</button>
+                        <button id="show-forgot-password-modal" class="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none">
+                            Mot de passe oublié ?
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- MODALS (identiques à l'original) -->
-        <!-- ... (signup-modal, signup-success-modal, forgot-password-modal, notification-modal, profile-modal) ... -->
-        <!-- Pour concision, je ne les répète pas ici, mais ils sont identiques à votre fichier source -->
+        <!-- MODAL D'INSCRIPTION (Modernisé) -->
+        <div id="signup-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <!-- Titre -->
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">Créer votre compte BRIOVA</h3>
 
-        <!-- Section Dashboard -->
-        <div id="dashboard-section" class="hidden">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <div class="flex flex-col md:flex-row md:items-center gap-4">
-                    <div class="flex-shrink-0">
-                        <img src="https://cdn.prod.website-files.com/68b9f8920957ffd144ee6dd0/68d2e687122a4d05e0c8b291_Logo%20site%20web%20horiz.png" alt="Brieova Logo" class="h-10 md:h-12 w-auto">
+                <!-- Formulaire -->
+                <div class="space-y-6">
+                    <div>
+                        <label for="signup-modal-email" class="block text-sm font-medium text-gray-700">Adresse email</label>
+                        <input type="email" id="signup-modal-email" placeholder="Adresse email" class="w-full px-4 py-3 mt-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
-                    <div class="flex flex-col items-center md:items-start text-center md:text-left">
-                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Votre Dashboard</h2>
-                        <span id="user-email" class="font-medium text-gray-600 text-sm md:text-base"></span>
+                    <div>
+                        <label for="signup-modal-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                        <input type="password" id="signup-modal-password" placeholder="Mot de passe" class="w-full px-4 py-3 mt-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="signup-modal-password-confirm" class="block text-sm font-medium text-gray-700">Confirmez le mot de passe</label>
+                        <input type="password" id="signup-modal-password-confirm" placeholder="Confirmez le mot de passe" class="w-full px-4 py-3 mt-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <p id="signup-modal-error" class="text-sm text-red-500 hidden"></p>
+                    <div class="flex space-x-4">
+                        <button id="signup-modal-cancel" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Annuler</button>
+                        <button id="signup-modal-submit" class="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Créer mon compte</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE SUCCÈS (Modernisé) -->
+        <div id="signup-success-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <svg class="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <h3 class="text-2xl font-bold text-gray-800 mt-4">Félicitations !</h3>
+                <p class="text-gray-600 mt-2">Votre compte a été créé avec succès.</p>
+                <p class="text-gray-600 mt-2">Vous allez recevoir un email de confirmation.</p>
+                <button id="signup-success-login-button" class="w-full px-4 py-3 mt-6 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Se Connecter</button>
+            </div>
+        </div>
+
+        <!-- MODAL DE RÉINITIALISATION DE MOT DE PASSE -->
+        <div id="forgot-password-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3 class="text-2xl font-bold text-center text-gray-800">Réinitialiser votre mot de passe</h3>
+                <p class="text-gray-600 text-center">Entrez votre adresse email pour recevoir un lien de réinitialisation.</p>
+                <div class="space-y-6 mt-6">
+                    <div>
+                        <label for="forgot-password-email" class="block text-sm font-medium text-gray-700">Adresse email</label>
+                        <input type="email" id="forgot-password-email" placeholder="Entrez votre adresse email" class="w-full px-4 py-3 mt-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <p id="forgot-password-error" class="text-sm text-red-500 hidden"></p>
+                    <p id="forgot-password-success" class="text-sm text-green-500 hidden"></p>
+                    <div class="flex space-x-4">
+                        <button id="forgot-password-cancel" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Annuler</button>
+                        <button id="forgot-password-submit" class="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Envoyer le lien</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Section Dashboard (initialement cachée) -->
+<div id="dashboard-section" class="hidden">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <!-- Logo et Titre/Email sur une ligne sur desktop, en colonne sur mobile -->
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <!-- Logo -->
+            <div class="flex-shrink-0">
+                <img src="https://cdn.prod.website-files.com/68b9f8920957ffd144ee6dd0/68d2e687122a4d05e0c8b291_Logo%20site%20web%20horiz.png" alt="Brieova Logo" class="h-10 md:h-12 w-auto">
+            </div>
+            <!-- Titre et Email -->
+            <div class="flex flex-col items-center md:items-start text-center md:text-left">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Votre Dashboard</h2>
+                <span id="user-email" class="font-medium text-gray-600 text-sm md:text-base"></span>
+            </div>
+        </div>
+
+                <!-- Panneau Utilisateur Moderne -->
                 <div class="user-panel">
+                    <!-- Lien Home -->
                     <a href="https://dashboard.brieova.com" target="_blank" class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v6m3-2a3 3 0 110-6v6zm5-2a3 3 0 110-6v6z" />
-                        </svg> Home
+                        </svg>
+                        Home
                     </a>
+                    <!-- Bouton Profil -->
                     <button id="open-profile-modal" class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg> Profil
+                        </svg>
+                        Profil
                     </button>
-                    <div id="user-status" class="status-badge bg-gray-100 text-gray-800"></div>
-                    <div id="debriefs-remaining" class="status-badge bg-green-100 text-green-800"></div>
-                    <div id="user-record-id" class="status-badge bg-blue-100 text-blue-800"></div>
+                    <!-- Statut de Compte -->
+                    <div id="user-status" class="status-badge bg-gray-100 text-gray-800">
+                        <!-- Le statut sera affiché ici -->
+                    </div>
+                    <!-- Nombre de Debriefs Restants -->
+                    <div id="debriefs-remaining" class="status-badge bg-green-100 text-green-800">
+                        <!-- Le nombre de debriefs restants sera affiché ici -->
+                    </div>
+                    <!-- Bouton Se Déconnecter -->
                     <button id="logout-button" class="btn-danger flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 6v-6" />
-                        </svg> Déconnexion
+                        </svg>
+                        Déconnexion
                     </button>
                 </div>
             </div>
 
-            <!-- Cards pour ajouter des liens -->
             <div class="card">
                 <h3 class="text-xl font-semibold text-gray-700 mb-4">Articles / Liens RSS</h3>
                 <div class="flex space-x-2">
@@ -206,31 +342,56 @@
                     <button onclick="addLink('Podcast RSS Links', 'podcast-link-input')" class="btn btn-secondary">Ajouter</button>
                 </div>
             </div>
-
-            <!-- Tableau des sources -->
             <div class="card">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-4">Vos Sources Actuelles</h2>
                 <table class="w-full text-left">
-                    <thead>
-                        <tr>
-                            <th class="table-cell font-semibold text-gray-600">Type</th>
-                            <th class="table-cell font-semibold text-gray-600">Liens</th>
-                            <th class="table-cell font-semibold text-gray-600">Actions</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th class="table-cell font-semibold text-gray-600">Type</th><th class="table-cell font-semibold text-gray-600">Liens</th><th class="table-cell font-semibold text-gray-600">Actions</th></tr></thead>
                     <tbody id="sources-table"></tbody>
                 </table>
             </div>
-
             <div class="text-center">
                 <button id="start-debrief-button" class="btn btn-primary text-lg">Lancer le Débrief</button>
                 <p id="usage-limit" class="text-gray-500 text-sm mt-4"></p>
             </div>
         </div>
     </div>
+    
+    <div id="notification-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <svg class="mx-auto mb-4 w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <h3 class="text-xl font-semibold text-gray-800">Votre débrief est en cours !</h3>
+            <p class="text-gray-600 mt-2">Vous recevrez la synthèse dans quelques minutes sur votre boîte mail.</p>
+        </div>
+    </div>
 
-    <!-- Modals (copiés tels quels de votre fichier source) -->
-    <!-- ... (signup-modal, signup-success-modal, forgot-password-modal, notification-modal, profile-modal) ... -->
+    <!-- MODAL DE PROFIL -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-2xl font-semibold text-gray-800">Informations du Profil</h3>
+                <button id="close-profile-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <label for="profile-email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="profile-email" class="input-field mt-1 w-full" readonly>
+                </div>
+                <div>
+                    <label for="profile-password" class="block text-sm font-medium text-gray-700">Nouveau Mot de Passe</label>
+                    <input type="password" id="profile-password" placeholder="Entrez un nouveau mot de passe" class="input-field mt-1 w-full">
+                </div>
+                <div>
+                    <label for="profile-password-confirm" class="block text-sm font-medium text-gray-700">Confirmer le Mot de Passe</label>
+                    <input type="password" id="profile-password-confirm" placeholder="Confirmez le nouveau mot de passe" class="input-field mt-1 w-full">
+                </div>
+                <p id="profile-error" class="text-sm text-red-500 hidden"></p>
+                <div class="flex space-x-4">
+                    <button id="save-profile-button" class="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Enregistrer</button>
+                    <button id="cancel-profile-button" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- CONFIGURATION FIREBASE ---
@@ -242,192 +403,569 @@
            messagingSenderId: "931818128414",
            appId: "1:931818128414:web:8ee00d3f3bfd5fc9f21a0f"
         };
+
+        // Initialiser Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        // --- CONFIGURATION SÉCURISÉE N8N ---
-        const USER_ACTIONS_WEBHOOK_URL = 'https://n8n.brieova.com/webhook/user-actions';
+        // Forcer la persistance de la session
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .then(() => {
+                console.log("Persistance de la session activée.");
+            })
+            .catch((error) => {
+                console.error("Erreur lors de la configuration de la persistance :", error);
+            });
+
+        // --- CONFIGURATION AIRTABLE & N8N ---
+        const AIRTABLE_API_KEY = 'patbGgGY5VbzeauNa.1a16b1a4c1b28dfbdb50a55a68d1ef32379811df9091c43acd14060c2b18e347';
+        const AIRTABLE_BASE_ID = 'appYv20j71DVJEqP4';
+        const AIRTABLE_TABLE_NAME = 'Users';
+        const N8N_DEBRIEF_WEBHOOK_URL = 'https://n8n.brieova.com/webhook/99a67a4c-8c43-49a3-a3bd-fb98ba473987';
+        const CREATE_USER_WEBHOOK_URL = 'https://n8n.brieova.com/webhook/5454c68d-fcb5-4f0f-85ab-367b64f304a3';
         const MAX_DEBRIEFS_FREE = 5;
 
         // --- VARIABLES GLOBALES ---
         let userRecord = null;
         let firebaseUser = null;
+        let isCheckingAuth = true;
 
-        // --- APPEL SÉCURISÉ AU WEBHOOK N8N ---
-        async function callN8n(action, data = {}) {
-            const response = await fetch(USER_ACTIONS_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, ...data })
-            });
+        // --- FONCTIONS UTILITAIRES AIRTABLE ---
+        async function apiCall(url, options = {}) {
+            options.headers = {
+                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            const response = await fetch(url, options);
             if (!response.ok) {
-                throw new Error(`Erreur n8n (${response.status}): ${await response.text()}`);
+                console.error("Erreur API Airtable:", await response.json());
+                throw new Error(`Airtable API error: ${response.status}`);
             }
-            return await response.json();
+            return response.json();
         }
 
-        // --- FONCTIONS PRINCIPALES ---
-        async function findOrCreateUser(email) {
-            try {
-                // Tente de trouver l'utilisateur
-                const record = await callN8n('findUserByEmail', { email });
-                if (record && record.id) {
-                    userRecord = record;
-                    return;
-                }
-            } catch (error) {
-                console.warn("Utilisateur non trouvé, tentative de création...");
+       async function findOrCreateUser(email) {
+    const maxRetries = 5; // Nombre maximum de tentatives
+    const delay = 1000; // Délai entre chaque tentative (1 seconde)
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Tentative ${attempt} de récupération de l'utilisateur ${email}...`);
+            const data = await apiCall(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?filterByFormula={Email}="${email}"`);
+
+            if (data.records.length > 0) {
+                userRecord = data.records[0];
+                console.log("Utilisateur trouvé dans Airtable :", userRecord.id);
+                return true;
+            } else {
+                console.log("Utilisateur non trouvé. Tentative de création...");
+                const newData = await apiCall(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ fields: { "Email": email, "Plan": "Free", "Debriefs Restants": MAX_DEBRIEFS_FREE }})
+                });
+                userRecord = newData;
+                console.log("Utilisateur créé dans Airtable :", userRecord.id);
+                return true;
+            }
+        } catch (error) {
+            console.error(`Erreur lors de la tentative ${attempt}:`, error);
+
+            // Si c'est la dernière tentative, on lève l'erreur
+            if (attempt === maxRetries) {
+                throw new Error("Impossible de récupérer ou créer l'utilisateur après plusieurs tentatives.");
             }
 
-            // Si non trouvé, on suppose qu'il sera créé par un autre webhook (ou on gère ici si nécessaire)
-            // Dans votre cas, le workflow n8n ne gère pas `createUser`, donc on suppose que tous les utilisateurs Firebase existent déjà dans Airtable.
-            // Sinon, vous devriez ajouter une action `createUser` dans votre workflow.
-            throw new Error("Utilisateur non trouvé dans la base de données.");
+            // Attendre avant de réessayer
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
+        function updateSourcesTable() {
+            if (!userRecord) return;
+            const tableBody = document.getElementById('sources-table');
+            tableBody.innerHTML = '';
+            const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
+
+            fieldsToShow.forEach(fieldName => {
+                const row = document.createElement('tr');
+                const linksArray = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+                
+                let linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
+                if (linksArray.length > 0) {
+                    linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
+                    linksArray.forEach(link => {
+                        linksHtml += `<span>${link}</span><br/>`;
+                    });
+                    linksHtml += '</div>';
+                }
+
+                row.innerHTML = `
+                    <td class="table-cell font-semibold text-gray-800">${fieldName.replace('Links', '').replace('RSS', '')}</td>
+                    <td class="table-cell">${linksHtml}</td>
+                    <td class="table-cell"><button onclick="clearLinks('${fieldName}')" class="btn btn-secondary text-sm">Vider</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
         }
 
         async function addLink(fieldName, inputId) {
             if (!userRecord) return;
-            const input = document.getElementById(inputId);
-            const newLinks = input.value.trim();
+            const inputElement = document.getElementById(inputId);
+            const newLinks = inputElement.value.trim();
             if (!newLinks) return;
 
-            const existing = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+            const existingLinks = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
             const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
-            const allLinks = [...new Set([...existing, ...newLinksArray])].join(',');
+            const allLinks = [...new Set([...existingLinks, ...newLinksArray])].join(',');
 
-            const updated = await callN8n('addLink', {
-                recordId: userRecord.id,
-                fieldName: fieldName,
-                allLinks: allLinks
-            });
-            userRecord = updated;
-            input.value = '';
-            updateUI();
+            try {
+                const updatedRecord = await apiCall(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}/${userRecord.id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ fields: { [fieldName]: allLinks } })
+                });
+                userRecord = updatedRecord;
+                inputElement.value = '';
+                updateSourcesTable();
+            } catch (error) {
+                alert("Impossible de sauvegarder le lien.");
+            }
         }
 
         async function clearLinks(fieldName) {
             if (!userRecord) return;
-            const updated = await callN8n('clearLinks', {
-                recordId: userRecord.id,
-                fieldName: fieldName
-            });
-            userRecord = updated;
-            updateUI();
-        }
-
-        async function startDebrief() {
-            if (!userRecord) return;
-            const hasLinks = userRecord.fields['Article RSS Links'] || userRecord.fields['YouTube Links'] || userRecord.fields['Podcast RSS Links'];
-            if (!hasLinks) {
-                alert("Ajoutez au moins un lien avant de lancer le débrief.");
-                return;
-            }
-            if ((userRecord.fields['Debriefs Restants'] || 0) <= 0) {
-                alert("Vous n'avez plus de débriefs restants.");
-                return;
-            }
-
-            const btn = document.getElementById('start-debrief-button');
-            btn.disabled = true;
-            btn.textContent = 'En cours...';
-
             try {
-                const updated = await callN8n('startDebrief', { recordId: userRecord.id });
-                userRecord = updated;
-                updateUI();
-                document.getElementById('notification-modal').classList.remove('hidden');
-                setTimeout(() => document.getElementById('notification-modal').classList.add('hidden'), 5000);
+                const updatedRecord = await apiCall(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}/${userRecord.id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ fields: { [fieldName]: "" } })
+                });
+                userRecord = updatedRecord;
+                updateSourcesTable();
             } catch (error) {
-                alert("Erreur lors du lancement du débrief: " + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Lancer le Débrief';
+                alert("Impossible de vider les liens.");
             }
         }
 
-        // --- MISE À JOUR DE L'INTERFACE ---
-        function updateUI() {
-            if (!userRecord || !firebaseUser) return;
-            document.getElementById('user-email').textContent = firebaseUser.email;
-
-            // Statut
-            const statusEl = document.getElementById('user-status');
-            const status = userRecord.fields.Status || 'Inconnu';
-            let statusClass = 'bg-gray-100 text-gray-800';
-            if (status === 'Beta') statusClass = 'bg-blue-100 text-blue-800';
-            else if (status === 'Waitlist') statusClass = 'bg-purple-100 text-purple-800';
-            statusEl.className = `status-badge ${statusClass}`;
-            statusEl.textContent = status;
-
-            // Débriefs restants
-            const debriefsEl = document.getElementById('debriefs-remaining');
-            const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
-            let debriefsClass = 'bg-green-100 text-green-800';
-            if (remaining <= 0) debriefsClass = 'bg-red-100 text-red-800';
-            else if (remaining <= 2) debriefsClass = 'bg-yellow-100 text-yellow-800';
-            debriefsEl.className = `status-badge ${debriefsClass}`;
-            debriefsEl.textContent = `Debriefs: ${remaining}`;
-
-            // ID Airtable
-            document.getElementById('user-record-id').textContent = `ID: ${userRecord.id}`;
-
-            // Tableau des sources
-            const table = document.getElementById('sources-table');
-            table.innerHTML = '';
-            ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'].forEach(field => {
-                const links = userRecord.fields[field] ? String(userRecord.fields[field]).split(',').filter(Boolean) : [];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="table-cell font-semibold">${field.replace(' Links', '').replace('RSS ', '')}</td>
-                    <td class="table-cell">${links.length ? links.join('<br>') : '<span class="text-gray-400">Aucun lien</span>'}</td>
-                    <td class="table-cell"><button onclick="clearLinks('${field}')" class="btn btn-secondary text-sm">Vider</button></td>
-                `;
-                table.appendChild(row);
-            });
-
-            // Limite d'utilisation
-            const usageEl = document.getElementById('usage-limit');
+        function updateUsageLimit() {
+            if (!userRecord) return;
+            const usageElement = document.getElementById('usage-limit');
+            const debriefButton = document.getElementById('start-debrief-button');
             if (userRecord.fields.Plan === 'Free') {
-                usageEl.textContent = `Offre Gratuite : ${remaining} débrief(s) restant(s).`;
+                const remaining = userRecord.fields['Debriefs Restants'] || 0;
+                usageElement.textContent = `Offre Gratuite : Il vous reste ${remaining} débrief(s).`;
+                if (remaining <= 0) {
+                    debriefButton.disabled = true;
+                    debriefButton.textContent = 'Limite atteinte';
+                    debriefButton.classList.remove('btn-primary');
+                }
             } else {
-                usageEl.textContent = 'Plan Premium : débriefs illimités !';
+                usageElement.textContent = 'Plan Premium : Profitez de débriefs illimités !';
             }
         }
 
-        // --- GESTION DE L'AUTHENTIFICATION ---
-        function showAuth() {
+       async function startDebrief() {
+    if (!userRecord) return;
+
+    // Vérifier s'il y a au moins un lien dans Airtable
+    const hasLinks = userRecord.fields['Article RSS Links'] || 
+                     userRecord.fields['YouTube Links'] || 
+                     userRecord.fields['Podcast RSS Links'];
+
+    if (!hasLinks) {
+        alert("Vous devez ajouter au moins un lien avant de lancer le débrief.");
+        return;
+    }
+
+    // Récupérer le nombre de debriefs restants depuis Airtable
+    let remaining = userRecord.fields['Debriefs Restants'] || 0;
+
+    // S'assurer que remaining est un nombre
+    remaining = parseInt(remaining);
+    if (isNaN(remaining)) {
+        alert("Erreur interne : le nombre de débriefs restants n'est pas valide.");
+        return;
+    }
+
+    // Vérifier si l'utilisateur a encore des debriefs restants
+    if (remaining <= 0) {
+        // ... (votre code pour afficher le popup)
+        return;
+    }
+
+    const debriefButton = document.getElementById('start-debrief-button');
+    debriefButton.disabled = true;
+    debriefButton.textContent = 'En cours...';
+
+    try {
+        // Décrémenter le nombre de debriefs restants dans Airtable
+        remaining = remaining - 1;
+        
+        // Valider que remaining est bien un nombre
+        if (typeof remaining !== 'number' || isNaN(remaining)) {
+            throw new Error("Le nombre de débriefs restants n'est pas valide.");
+        }
+
+        const updatedRecord = await apiCall(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}/${userRecord.id}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fields: { "Debriefs Restants": remaining } })
+        });
+
+        userRecord = updatedRecord;
+
+        // Mettre à jour l'interface utilisateur
+        showDashboard();
+        updateUsageLimit();
+
+        // Appeler le webhook n8n pour lancer le débrief
+        const response = await fetch(N8N_DEBRIEF_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recordId: userRecord.id })
+        });
+
+        if (response.ok) {
+            document.getElementById('notification-modal').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('notification-modal').classList.add('hidden'); }, 5000);
+        } else { throw new Error("Le serveur n8n a retourné une erreur."); }
+    } catch (error) {
+        console.error("Erreur lors du lancement du débrief:", error);
+        alert("Une erreur est survenue lors du lancement du débrief. Veuillez réessayer.");
+    } finally {
+        debriefButton.disabled = false;
+        debriefButton.textContent = 'Lancer le Débrief';
+    }
+}
+
+        // --- FONCTIONS FIREBASE ---
+        function showAuthSection() {
             document.getElementById('loading-indicator').classList.add('hidden');
             document.getElementById('auth-section').classList.remove('hidden');
             document.getElementById('dashboard-section').classList.add('hidden');
+            document.title = 'BRIOVA - Connexion';
         }
 
         function showDashboard() {
             document.getElementById('loading-indicator').classList.add('hidden');
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
-            updateUI();
+            document.title = `BRIOVA - Dashboard de ${firebaseUser.email}`;
+            updateSourcesTable();
+            updateUsageLimit();
+            // Afficher l'email de l'utilisateur
+            document.getElementById('user-email').textContent = firebaseUser.email;
+
+            // Afficher le statut de l'utilisateur
+            const userStatusElement = document.getElementById('user-status');
+            const status = userRecord.fields.Status || 'Inconnu'; // Récupère le statut depuis Airtable
+
+            // Appliquer une couleur en fonction du statut
+            let bgColorClass = 'bg-gray-100 text-gray-800';
+            if (status === 'Beta') {
+                bgColorClass = 'bg-blue-100 text-blue-800';
+            } else if (status === 'Waitlist') {
+                bgColorClass = 'bg-purple-100 text-purple-800';
+            }
+            userStatusElement.className = `status-badge ${bgColorClass}`;
+            userStatusElement.textContent = status;
+
+            // Afficher le nombre de debriefs restants
+            const debriefsRemainingElement = document.getElementById('debriefs-remaining');
+            const remaining = userRecord.fields['Debriefs Restants'] || 0;
+            let debriefsBgColorClass = 'bg-green-100 text-green-800';
+            if (remaining <= 0) {
+                debriefsBgColorClass = 'bg-red-100 text-red-800';
+            } else if (remaining <= 2) {
+                debriefsBgColorClass = 'bg-yellow-100 text-yellow-800';
+            }
+            debriefsRemainingElement.className = `status-badge ${debriefsBgColorClass}`;
+            debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
         }
 
-        auth.onAuthStateChanged(async (user) => {
-            document.getElementById('loading-indicator').classList.remove('hidden');
-            if (user) {
-                firebaseUser = user;
-                try {
-                    await findOrCreateUser(user.email);
-                    showDashboard();
-                } catch (error) {
-                    console.error("Erreur:", error);
-                    alert("Utilisateur non trouvé. Veuillez contacter le support.");
-                    await auth.signOut();
+// --- NOUVELLE FONCTION : Appeler le webhook n8n pour créer l'utilisateur dans Airtable ---
+async function callCreateUserWebhook(email) {
+    try {
+        const response = await fetch(CREATE_USER_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                // Ajoutez typecast: true pour forcer Airtable à convertir les valeurs
+                typecast: true
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erreur du serveur n8n: ${response.status}`);
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Erreur lors de l'appel au webhook n8n:", error);
+        return false;
+    }
+}
+
+        // --- GESTION DU MODAL D'INSCRIPTION ---
+        document.getElementById('show-signup-modal-button').addEventListener('click', () => {
+            document.getElementById('signup-modal').classList.remove('hidden');
+            document.getElementById('signup-modal-email').value = '';
+            document.getElementById('signup-modal-password').value = '';
+            document.getElementById('signup-modal-password-confirm').value = '';
+            document.getElementById('signup-modal-error').classList.add('hidden');
+        });
+
+        document.getElementById('signup-modal-cancel').addEventListener('click', () => {
+            document.getElementById('signup-modal').classList.add('hidden');
+        });
+
+       document.getElementById('signup-modal-submit').addEventListener('click', async () => {
+    const email = document.getElementById('signup-modal-email').value.trim();
+    const password = document.getElementById('signup-modal-password').value.trim();
+    const passwordConfirm = document.getElementById('signup-modal-password-confirm').value.trim();
+    const errorElement = document.getElementById('signup-modal-error');
+
+    // Validation basique
+    if (!email || !password || !passwordConfirm) {
+        errorElement.textContent = "Veuillez remplir tous les champs.";
+        errorElement.classList.remove('hidden');
+        return;
+    }
+
+    if (!email.includes('@')) {
+        errorElement.textContent = "Veuillez entrer une adresse email valide.";
+        errorElement.classList.remove('hidden');
+        return;
+    }
+
+    if (password !== passwordConfirm) {
+        errorElement.textContent = "Les mots de passe ne correspondent pas.";
+        errorElement.classList.remove('hidden');
+        return;
+    }
+
+    if (password.length < 6) {
+        errorElement.textContent = "Le mot de passe doit comporter au moins 6 caractères.";
+        errorElement.classList.remove('hidden');
+        return;
+    }
+
+    // Désactiver le bouton pendant le traitement
+    const submitButton = document.getElementById('signup-modal-submit');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Création en cours...';
+
+    try {
+        // Étape 1 : Créer le compte Firebase
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        firebaseUser = userCredential.user;
+
+        // Étape 2 : Appeler le webhook n8n pour créer l'utilisateur dans Airtable
+        const webhookSuccess = await callCreateUserWebhook(email);
+
+        if (!webhookSuccess) {
+            // Si le webhook échoue, on supprime le compte Firebase pour ne pas laisser de compte orphelin
+            await firebaseUser.delete();
+            throw new Error("Erreur lors de la création du compte dans notre base de données.");
+        }
+
+        // 🔥 ÉTAPE CRUCIALE : Récupérer les données de l'utilisateur avec retry
+        await findOrCreateUser(email);
+
+        // Tout s'est bien passé, on affiche le modal de succès
+        document.getElementById('signup-modal').classList.add('hidden');
+        document.getElementById('signup-success-modal').classList.remove('hidden');
+
+    } catch (error) {
+        console.error("Erreur lors de la création du compte:", error);
+        let message = "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.";
+
+        if (error.code === 'auth/email-already-in-use') {
+            message = "Un compte existe déjà avec cette adresse email. Veuillez vous connecter.";
+        } else if (error.code === 'auth/invalid-email') {
+            message = "L'adresse email est invalide.";
+        } else if (error.code === 'auth/weak-password') {
+            message = "Le mot de passe est trop faible (min. 6 caractères).";
+        }
+
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Créer mon compte';
+    }
+});
+        // --- GESTION DU MODAL DE SUCCÈS ---
+        document.getElementById('signup-success-login-button').addEventListener('click', () => {
+            document.getElementById('signup-success-modal').classList.add('hidden');
+            // Le modal de connexion est déjà visible, rien d'autre à faire
+        });
+
+        // --- GESTION DU MODAL DE PROFIL ---
+        document.getElementById('open-profile-modal').addEventListener('click', () => {
+            document.getElementById('profile-modal').classList.remove('hidden');
+            document.getElementById('profile-email').value = firebaseUser.email;
+        });
+
+        document.getElementById('close-profile-modal').addEventListener('click', () => {
+            document.getElementById('profile-modal').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-profile-button').addEventListener('click', () => {
+            document.getElementById('profile-modal').classList.add('hidden');
+        });
+
+        document.getElementById('save-profile-button').addEventListener('click', async () => {
+            const newPassword = document.getElementById('profile-password').value.trim();
+            const confirmPassword = document.getElementById('profile-password-confirm').value.trim();
+            const errorElement = document.getElementById('profile-error');
+
+            if (newPassword !== confirmPassword) {
+                errorElement.textContent = "Les mots de passe ne correspondent pas.";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                errorElement.textContent = "Le mot de passe doit comporter au moins 6 caractères.";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Récupérer l'email de l'utilisateur actuel
+                const email = firebaseUser.email;
+
+                // Demander à l'utilisateur de saisir son ancien mot de passe (pour sécurité)
+                const oldPassword = prompt("Veuillez entrer votre mot de passe actuel pour confirmer la modification :");
+
+                if (!oldPassword) {
+                    alert("Vous devez entrer votre mot de passe actuel.");
+                    return;
                 }
-            } else {
-                showAuth();
+
+                // Réauthentifier l'utilisateur avec ses anciennes credentials
+                const credential = firebase.auth.EmailAuthProvider.credential(email, oldPassword);
+                await firebaseUser.reauthenticateWithCredential(credential);
+
+                // Maintenant que la session est réactualisée, on peut mettre à jour le mot de passe
+                await firebaseUser.updatePassword(newPassword);
+
+                alert("Mot de passe mis à jour avec succès !");
+                document.getElementById('profile-modal').classList.add('hidden');
+            } catch (error) {
+                console.error("Erreur lors de la mise à jour du mot de passe:", error);
+                let message = "Une erreur est survenue lors de la mise à jour du mot de passe.";
+                if (error.code === 'auth/wrong-password') {
+                    message = "Le mot de passe actuel que vous avez saisi est incorrect.";
+                } else if (error.code === 'auth/invalid-credential') {
+                    message = "Les informations d'identification fournies sont incorrectes ou ont expiré.";
+                }
+                alert(message);
             }
         });
 
-        // --- ÉCOUTEURS ---
-        document.getElementById('login-button').addEventListener('click', async () => {
+        // --- GESTION DU MODAL DE RÉINITIALISATION DE MOT DE PASSE ---
+        document.getElementById('show-forgot-password-modal').addEventListener('click', () => {
+            document.getElementById('forgot-password-modal').classList.remove('hidden');
+            document.getElementById('forgot-password-email').value = '';
+            document.getElementById('forgot-password-error').classList.add('hidden');
+            document.getElementById('forgot-password-success').classList.add('hidden');
+        });
+
+        document.getElementById('forgot-password-cancel').addEventListener('click', () => {
+            document.getElementById('forgot-password-modal').classList.add('hidden');
+        });
+
+        document.getElementById('forgot-password-submit').addEventListener('click', async () => {
+            const email = document.getElementById('forgot-password-email').value.trim();
+            const errorElement = document.getElementById('forgot-password-error');
+            const successElement = document.getElementById('forgot-password-success');
+
+            if (!email) {
+                errorElement.textContent = "Veuillez entrer votre adresse email.";
+                errorElement.classList.remove('hidden');
+                successElement.classList.add('hidden');
+                return;
+            }
+
+            if (!email.includes('@')) {
+                errorElement.textContent = "Veuillez entrer une adresse email valide.";
+                errorElement.classList.remove('hidden');
+                successElement.classList.add('hidden');
+                return;
+            }
+
+            // Désactiver le bouton pendant le traitement
+            const submitButton = document.getElementById('forgot-password-submit');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Envoi en cours...';
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                successElement.textContent = "Un email de réinitialisation a été envoyé à votre adresse.";
+                successElement.classList.remove('hidden');
+                errorElement.classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('forgot-password-modal').classList.add('hidden');
+                }, 3000);
+            } catch (error) {
+                console.error("Erreur lors de l'envoi de l'email de réinitialisation:", error);
+                let message = "Une erreur est survenue lors de l'envoi de l'email.";
+                if (error.code === 'auth/user-not-found') {
+                    message = "Aucun compte n'est associé à cette adresse email.";
+                }
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                successElement.classList.add('hidden');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Envoyer le lien';
+            }
+        });
+
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+                firebaseUser = null;
+                userRecord = null;
+                showAuthSection();
+            } catch (error) {
+                console.error("Erreur lors de la déconnexion:", error);
+                alert("Impossible de se déconnecter. Veuillez réessayer.");
+            }
+        }
+
+        // --- GESTION DE LA PERSISTANCE ---
+        auth.onAuthStateChanged(async (user) => {
+            isCheckingAuth = false;
+            document.getElementById('loading-indicator').classList.remove('hidden');
+
+            if (user) {
+                // L'utilisateur est connecté
+                firebaseUser = user;
+                try {
+                    await findOrCreateUser(user.email); // On s'assure que l'utilisateur existe dans Airtable
+                    showDashboard();
+                } catch (error) {
+                    console.error("Erreur lors de la récupération des données Airtable:", error);
+                    alert("Erreur de connexion à la base de données. Veuillez vous reconnecter.");
+                    await handleLogout(); // Force la déconnexion si Airtable échoue
+                }
+            } else {
+                // Aucun utilisateur connecté
+                showAuthSection();
+            }
+
+            document.getElementById('loading-indicator').classList.add('hidden');
+        });
+
+        // --- ÉCOUTEURS D'ÉVÉNEMENTS ---
+        document.getElementById('login-button').addEventListener('click', () => {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value.trim();
             if (!email || !password) {
@@ -435,19 +973,25 @@
                 document.getElementById('auth-error').classList.remove('hidden');
                 return;
             }
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-            } catch (error) {
-                document.getElementById('auth-error').textContent = "Erreur: " + error.message;
-                document.getElementById('auth-error').classList.remove('hidden');
-            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    firebaseUser = userCredential.user;
+                    findOrCreateUser(email).then(() => {
+                        showDashboard();
+                    }).catch((error) => {
+                        document.getElementById('auth-error').textContent = "Erreur de connexion : " + error.message;
+                        document.getElementById('auth-error').classList.remove('hidden');
+                    });
+                })
+                .catch((error) => {
+                    document.getElementById('auth-error').textContent = "Erreur de connexion : " + error.message;
+                    document.getElementById('auth-error').classList.remove('hidden');
+                });
         });
 
-        document.getElementById('logout-button').addEventListener('click', () => auth.signOut());
+        document.getElementById('logout-button').addEventListener('click', handleLogout);
         document.getElementById('start-debrief-button').addEventListener('click', startDebrief);
-
-        // --- MODALS (copiés de votre fichier source) ---
-        // ... (gestion des modals d'inscription, mot de passe oublié, profil) ...
     </script>
 </body>
 </html>
