@@ -419,19 +419,20 @@
         // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N ---
 
         // Trouver ou créer un utilisateur
-    async function findUserByEmail(email) {
-            const records = await callN8n('findUserByEmail', { email });
-         
-            if (records && Array.isArray(records) && records.length > 0) {
-                userRecord = records[0];
-            } else if (records && records.id) {
-                // Fallback for older n8n versions that might return a single object
-                userRecord = records;
-            }
-            else {
-                throw new Error("User record not found in Airtable or response is invalid.");
-            }
+async function findUserByEmail(email) {
+    const result = await callN8n('findUserByEmail', { email });
+    // Le nœud "Search records" d'Airtable dans n8n retourne toujours un tableau.
+    // On vérifie qu'il y a au moins un élément.
+    if (Array.isArray(result) && result.length > 0) {
+        userRecord = result[0]; // Prendre le premier élément du tableau
+        // Vérifiez que l'élément a bien un id et des fields
+        if (!userRecord || !userRecord.id || !userRecord.fields) {
+            throw new Error("L'enregistrement utilisateur est invalide.");
         }
+    } else {
+        throw new Error("Utilisateur non trouvé dans Airtable.");
+    }
+}
         // Ajouter un lien
         async function addLink(fieldName, inputId) {
             if (!userRecord) return;
@@ -886,4 +887,5 @@
     </script>
 </body>
 </html>
+
 
