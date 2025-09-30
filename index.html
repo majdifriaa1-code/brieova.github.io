@@ -430,12 +430,13 @@
         // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N ---
 
         // Trouver ou créer un utilisateur
-async function findUserByEmail(email) {
+async function findOrCreateUserByEmail(email) {
     try {
+        // 1. Essayer de trouver l'utilisateur
         const result = await callN8n('findUserByEmail', { email });
 
-        // Si on trouve l'utilisateur, on le charge
         if (result && result.id && result.Email) {
+            // ✅ Utilisateur trouvé
             userRecord = {
                 id: result.id,
                 fields: {
@@ -445,29 +446,32 @@ async function findUserByEmail(email) {
                     "YouTube Links": result["YouTube Links"] || "",
                     "Podcast RSS Links": result["Podcast RSS Links"] || "",
                     "Debriefs Restants": result["Debriefs Restants"] || 0,
-                    Plan: result.Plan || "Free",
+                    Plan: result.Plan || "Free"
                 }
             };
         } else {
-            // ❗️ Si l'utilisateur n'existe pas, on le crée via un nouvel appel n8n
-            console.log("Utilisateur non trouvé, création...");
-            const createdUser = await callN8n('createUser', { email }); // ⚠️ Vous devez créer cette action dans n8n !
+            // ❌ Utilisateur non trouvé → le créer
+            console.log("Utilisateur non trouvé, création en cours...");
+            const created = await callN8n('createUser', { email });
+            if (!created || !created.id) {
+                throw new Error("Échec de la création de l'utilisateur dans Airtable.");
+            }
             userRecord = {
-                id: createdUser.id,
+                id: created.id,
                 fields: {
-                    Email: createdUser.Email,
-                    Status: createdUser.Status || 'Inconnu',
+                    Email: created.Email,
+                    Status: created.Status || 'Waitlist',
                     "Article RSS Links": "",
                     "YouTube Links": "",
                     "Podcast RSS Links": "",
-                    "Debriefs Restants": MAX_DEBRIEFS_FREE, // Ou 0, selon votre logique
-                    Plan: "Free",
+                    "Debriefs Restants": created["Debriefs Restants"] || MAX_DEBRIEFS_FREE,
+                    Plan: created.Plan || "Free"
                 }
             };
         }
     } catch (error) {
-        console.error("Erreur lors de la recherche/création de l'utilisateur :", error);
-        throw new Error(`Impossible de charger ou créer votre profil. Veuillez contacter le support. Détails : ${error.message}`);
+        console.error("Erreur dans findOrCreateUserByEmail :", error);
+        throw new Error(`Impossible de charger ou créer votre profil : ${error.message}`);
     }
 }
         
@@ -733,7 +737,7 @@ async function findUserByEmail(email) {
                 firebaseUser = userCredential.user;
 
                 // Créer l'utilisateur dans Airtable via n8n
-                await findUserByEmail(email);
+                await findOrCreateUserByEmail(email);
 
                 document.getElementById('signup-modal').classList.add('hidden');
                 document.getElementById('signup-success-modal').classList.remove('hidden');
@@ -955,6 +959,7 @@ async function findUserByEmail(email) {
     </script>
 </body>
 </html>
+
 
 
 
