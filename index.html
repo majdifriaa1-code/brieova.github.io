@@ -524,28 +524,21 @@
             errorElement.classList.add('hidden');
             submitButton.disabled = true;
             submitButton.textContent = 'Création en cours...';
-           try {
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-    firebaseUser = userCredential.user;
-
-    // ⭐️ ATTENDEZ ICI QUE LA CRÉATION DANS AIRTABLE SOIT TERMINÉE
-    // Appeler findUserByEmail() pour créer l'enregistrement si nécessaire.
-    await findUserByEmail(email); // Ceci appellera 'findOrCreateUser' via n8n.
-
-    // ✅ Maintenant que tout est bon, affichez le modal de succès.
-    document.getElementById('signup-modal').classList.add('hidden');
-    document.getElementById('signup-success-modal').classList.remove('hidden');
-
-} catch (error) {
-    let message = "Une erreur est survenue. Veuillez réessayer.";
-    if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà avec cette adresse email."; }
-    else if (error.code === 'auth/invalid-email') { message = "L'adresse email est invalide."; }
-    errorElement.textContent = message;
-    errorElement.classList.remove('hidden');
-} finally {
-    submitButton.disabled = false;
-    submitButton.textContent = 'Créer mon compte';
-}
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                firebaseUser = userCredential.user;
+                document.getElementById('signup-modal').classList.add('hidden');
+                document.getElementById('signup-success-modal').classList.remove('hidden');
+            } catch (error) {
+                let message = "Une erreur est survenue. Veuillez réessayer.";
+                if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà avec cette adresse email."; }
+                else if (error.code === 'auth/invalid-email') { message = "L'adresse email est invalide."; }
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Créer mon compte';
+            }
         });
         document.getElementById('signup-success-login-button').addEventListener('click', () => {
             document.getElementById('signup-success-modal').classList.add('hidden');
@@ -624,4 +617,3 @@
     </script>
 </body>
 </html>
-
