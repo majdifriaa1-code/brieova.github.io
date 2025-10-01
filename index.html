@@ -430,10 +430,11 @@
         // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N ---
 
         // Trouver ou créer un utilisateur
+// Fonction modifiée : trouve ou crée l'utilisateur
 async function findOrCreateUserByEmail(email) {
     try {
         // 1. Essayer de trouver l'utilisateur
-        const result = await callN8n('findUserByEmail', { email });
+        const result = await callN8n('findOrCreateUserByEmail', { email });
 
         if (result && result.id && result.Email) {
             // ✅ Utilisateur trouvé
@@ -737,7 +738,7 @@ async function findOrCreateUserByEmail(email) {
                 firebaseUser = userCredential.user;
 
                 // Créer l'utilisateur dans Airtable via n8n
-                await findOrCreateUserByEmail(email);
+                await findOrCreateUserByEmail(email);;
 
                 document.getElementById('signup-modal').classList.add('hidden');
                 document.getElementById('signup-success-modal').classList.remove('hidden');
@@ -913,7 +914,7 @@ async function findOrCreateUserByEmail(email) {
             if (user) {
                 firebaseUser = user;
                 try {
-                    await findUserByEmail(user.email);
+                    await findOrCreateUserByEmail(user.email);
                     showDashboard();
                 } catch (error) {
                     console.error("Erreur lors de la récupération des données Airtable:", error);
@@ -941,7 +942,7 @@ async function findOrCreateUserByEmail(email) {
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     firebaseUser = userCredential.user;
-                    findUserByEmail(email).then(() => {
+                    findOrCreateUserByEmail(email).then(() => {
                         showDashboard();
                     }).catch((error) => {
                         document.getElementById('auth-error').textContent = "Erreur de connexion : " + error.message;
@@ -959,6 +960,7 @@ async function findOrCreateUserByEmail(email) {
     </script>
 </body>
 </html>
+
 
 
 
