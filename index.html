@@ -618,7 +618,81 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('logout-button').addEventListener('click', handleLogout);
         document.getElementById('start-debrief-button').addEventListener('click', startDebrief);
 
+
+// --- FIX: Empêcher les doubles clics et appels multiples ---
+document.addEventListener("DOMContentLoaded", () => {
+    const loginBtn = document.getElementById("login-button");
+    const signupBtn = document.getElementById("signup-modal-submit");
+
+    if (loginBtn) {
+        loginBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            if (loginBtn.disabled) return;
+            loginBtn.disabled = true;
+
+            try {
+                const email = document.getElementById("auth-email").value.trim();
+                const password = document.getElementById("auth-password").value.trim();
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+
+                firebaseUser = cred.user;
+                await findUserByEmail(email);
+
+                // afficher dashboard
+                document.getElementById("auth-section").classList.add("hidden");
+                document.getElementById("dashboard-section").classList.remove("hidden");
+
+            } catch (err) {
+                const errorEl = document.getElementById("auth-error");
+                errorEl.textContent = err.message;
+                errorEl.classList.remove("hidden");
+            } finally {
+                loginBtn.disabled = false;
+            }
+        });
+    }
+
+    if (signupBtn) {
+        signupBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            if (signupBtn.disabled) return;
+            signupBtn.disabled = true;
+
+            try {
+                const email = document.getElementById("signup-modal-email").value.trim();
+                const password = document.getElementById("signup-modal-password").value.trim();
+                const confirm = document.getElementById("signup-modal-password-confirm").value.trim();
+
+                if (password !== confirm) {
+                    throw new Error("Les mots de passe ne correspondent pas.");
+                }
+
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+
+                firebaseUser = cred.user;
+                await findUserByEmail(email);
+
+                document.getElementById("signup-modal").classList.add("hidden");
+                document.getElementById("signup-success-modal").classList.remove("hidden");
+
+            } catch (err) {
+                const errorEl = document.getElementById("signup-modal-error");
+                errorEl.textContent = err.message;
+                errorEl.classList.remove("hidden");
+            } finally {
+                signupBtn.disabled = false;
+            }
+        });
+    }
+});
+
+
+
+
+
+        
     </script>
 </body>
 </html>
+
 
