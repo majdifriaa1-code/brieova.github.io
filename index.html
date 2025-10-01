@@ -276,16 +276,22 @@
 
         // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N ---
 
-        // La seule fonction nécessaire pour interagir avec Airtable
+       // --- FONCTIONS POUR INTERAGIR AVEC AIRTABLE VIA N8N (VERSION CORRIGÉE ET ROBUSTE) ---
+
         async function findUserByEmail(email) {
             // Appelle la logique "Trouver ou Créer" dans n8n
-            const result = await callN8n('findOrCreateUser', { email });
-            
-            // Si n8n renvoie un objet valide avec un id, on met à jour userRecord
-            if (result && result.id) {
-                userRecord = result;
+            let rawResult = await callN8n('findOrCreateUser', { email });
+
+            // On s'assure d'avoir le bon objet, même si n8n renvoie un tableau avec un seul élément
+            let potentialRecord = Array.isArray(rawResult) ? rawResult[0] : rawResult;
+
+            // On valide que l'objet contient BIEN un 'id' ET un objet 'fields'
+            // C'est cette double vérification qui corrige l'erreur.
+            if (potentialRecord && potentialRecord.id && potentialRecord.fields) {
+                userRecord = potentialRecord;
             } else {
-                // Sinon, c'est une erreur inattendue
+                // Si le format n'est pas bon, on arrête tout et on affiche une erreur claire
+                console.error("Réponse inattendue ou mal formatée de n8n:", potentialRecord);
                 throw new Error("La réponse de la base de données est invalide.");
             }
         }
@@ -607,3 +613,4 @@
     </script>
 </body>
 </html>
+
