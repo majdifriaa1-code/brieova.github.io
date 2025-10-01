@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BRIOVA - Votre Dashboard</title>
-    <!-- Scripts Firebase correctement chargés SANS code JS dedans -->
+    <!-- Chargement propre des scripts externes SANS code JS dedans -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -236,59 +236,51 @@
            messagingSenderId: "931818128414",
            appId: "1:931818128414:web:8ee00d3f3bfd5fc9f21a0f"
         };
-        // Initialiser Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        // Forcer la persistance de la session
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-            .then(() => {
-                console.log("Persistance de la session activée.");
-            })
             .catch((error) => {
                 console.error("Erreur lors de la configuration de la persistance :", error);
             });
+
         // --- CONFIGURATION N8N ---
         const USER_ACTIONS_WEBHOOK_URL = 'https://n8n.brieova.com/webhook/user-actions';
-        const MAX_DEBRIEFS_FREE = 5;
+
         // --- VARIABLES GLOBALES ---
         let userRecord = null;
         let firebaseUser = null;
+        let isManualSignup = false; // ⭐️ Pour éviter le double appel après inscription
+
         // --- FONCTION UTILITAIRE POUR APPELER LE WEBHOOK N8N ---
         async function callN8n(action, data = {}) {
             try {
                 const response = await fetch(USER_ACTIONS_WEBHOOK_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action, ...data })
                 });
-                if (!response.ok) {
-                    throw new Error(`Erreur du serveur n8n: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Erreur du serveur n8n: ${response.status}`);
                 return await response.json();
             } catch (error) {
                 console.error("Erreur lors de l'appel au webhook n8n:", error);
                 throw new Error("Une erreur réseau ou serveur est survenue. Veuillez réessayer.");
             }
         }
-        // --- FONCTION AIRTABLE (CORRIGÉE POUR LA STRUCTURE DE DONNÉES "PLATE") ---
+
+        // --- FONCTION AIRTABLE ---
         async function findUserByEmail(email) {
             let rawResult = await callN8n('findOrCreateUser', { email });
             let potentialRecord = Array.isArray(rawResult) ? rawResult[0] : rawResult;
             if (potentialRecord && potentialRecord.id && potentialRecord.Email) {
                 const { id, createdTime, ...fields } = potentialRecord;
-                userRecord = {
-                    id: id,
-                    createdTime: createdTime,
-                    fields: fields
-                };
+                userRecord = { id, createdTime, fields };
             } else {
                 console.error("Réponse inattendue ou mal formatée de n8n:", potentialRecord);
                 throw new Error("La réponse de la base de données est invalide.");
             }
         }
-        // Ajouter un lien
+
+        // --- FONCTIONS UTILITAIRES (addLink, clearLinks, etc.) ---
         async function addLink(fieldName, inputId) {
             if (!userRecord) return;
             const inputElement = document.getElementById(inputId);
@@ -311,7 +303,7 @@
                 alert("Impossible de sauvegarder le lien. Erreur : " + error.message);
             }
         }
-        // Vider les liens d'un champ
+
         async function clearLinks(fieldName) {
             if (!userRecord) return;
             try {
@@ -326,12 +318,9 @@
                 alert("Impossible de vider les liens. Erreur : " + error.message);
             }
         }
-        // Mettre à jour le tableau des sources
+
         function updateSourcesTable() {
-            if (!userRecord || !userRecord.fields) {
-                console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour le tableau.");
-                return;
-            }
+            if (!userRecord || !userRecord.fields) return;
             const tableBody = document.getElementById('sources-table');
             tableBody.innerHTML = '';
             const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
@@ -341,9 +330,7 @@
                 let linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
                 if (linksArray.length > 0) {
                     linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
-                    linksArray.forEach(link => {
-                        linksHtml += `<span>${link}</span><br/>`;
-                    });
+                    linksArray.forEach(link => { linksHtml += `<span>${link}</span><br/>`; });
                     linksHtml += '</div>';
                 }
                 row.innerHTML = `
@@ -354,12 +341,9 @@
                 tableBody.appendChild(row);
             });
         }
-        // Mettre à jour la limite d'utilisation
+
         function updateUsageLimit() {
-            if (!userRecord || !userRecord.fields) {
-                console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour la limite.");
-                return;
-            }
+            if (!userRecord || !userRecord.fields) return;
             const usageElement = document.getElementById('usage-limit');
             const debriefButton = document.getElementById('start-debrief-button');
             const debriefsRemaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
@@ -381,7 +365,7 @@
                 debriefButton.classList.add('btn-primary');
             }
         }
-        // Lancer le débrief
+
         async function startDebrief() {
             if (!userRecord) return;
             const hasLinks = userRecord.fields['Article RSS Links'] || userRecord.fields['YouTube Links'] || userRecord.fields['Podcast RSS Links'];
@@ -393,30 +377,28 @@
             debriefButton.disabled = true;
             debriefButton.textContent = 'En cours...';
             try {
-                const updatedRecord = await callN8n('startDebrief', {
-                    recordId: userRecord.id
-                });
+                const updatedRecord = await callN8n('startDebrief', { recordId: userRecord.id });
                 userRecord = updatedRecord;
                 showDashboard();
                 document.getElementById('notification-modal').classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('notification-modal').classList.add('hidden');
-                }, 5000);
+                setTimeout(() => { document.getElementById('notification-modal').classList.add('hidden'); }, 5000);
             } catch (error) {
                 alert("Une erreur est survenue lors du lancement du débrief. Détails : " + error.message);
             } finally {
                 updateUsageLimit();
             }
         }
+
         // --- FONCTIONS D'AFFICHAGE ---
         function showAuthSection() {
             document.getElementById('auth-section').classList.remove('hidden');
             document.getElementById('dashboard-section').classList.add('hidden');
             document.title = 'BRIOVA - Connexion';
         }
+
         function showDashboard() {
             if (!userRecord || !userRecord.fields) {
-                console.error("Erreur : userRecord invalide. Impossible d'afficher le dashboard.");
+                console.error("Erreur : userRecord invalide.");
                 alert("Erreur interne. Veuillez vous reconnecter.");
                 handleLogout();
                 return;
@@ -442,6 +424,7 @@
             updateSourcesTable();
             updateUsageLimit();
         }
+
         async function handleLogout() {
             try {
                 await auth.signOut();
@@ -453,10 +436,13 @@
                 alert("Impossible de se déconnecter. Veuillez réessayer.");
             }
         }
-        // --- GESTION DE LA PERSISTANCE (VERSION CORRIGÉE ET ROBUSTE) ---
+
+        // --- GESTION DE LA PERSISTANCE (UNIQUE) ---
         auth.onAuthStateChanged(async (user) => {
             const loadingIndicator = document.getElementById('loading-indicator');
             if (user) {
+                if (isManualSignup) return; // ⭐️ Ignorer si c'est une inscription manuelle
+
                 loadingIndicator.classList.remove('hidden');
                 firebaseUser = user;
                 try {
@@ -474,6 +460,7 @@
                 loadingIndicator.classList.add('hidden');
             }
         });
+
         // --- ÉCOUTEURS D'ÉVÉNEMENTS ---
         document.getElementById('login-button').addEventListener('click', () => {
             const email = document.getElementById('auth-email').value.trim();
@@ -489,11 +476,9 @@
                 .then((userCredential) => {
                     firebaseUser = userCredential.user;
                     findUserByEmail(email)
-                        .then(() => {
-                            showDashboard();
-                        })
-                        .catch((error) => {
-                            errorElement.textContent = "Erreur de connexion à la base de données: " + error.message;
+                        .then(showDashboard)
+                        .catch((err) => {
+                            errorElement.textContent = "Erreur de connexion à la base de données: " + err.message;
                             errorElement.classList.remove('hidden');
                         });
                 })
@@ -506,33 +491,56 @@
                     errorElement.classList.remove('hidden');
                 });
         });
+
         document.getElementById('show-signup-modal-button').addEventListener('click', () => {
             document.getElementById('signup-modal').classList.remove('hidden');
         });
+
         document.getElementById('signup-modal-cancel').addEventListener('click', () => {
             document.getElementById('signup-modal').classList.add('hidden');
         });
+
         document.getElementById('signup-modal-submit').addEventListener('click', async () => {
             const email = document.getElementById('signup-modal-email').value.trim();
             const password = document.getElementById('signup-modal-password').value.trim();
             const passwordConfirm = document.getElementById('signup-modal-password-confirm').value.trim();
             const errorElement = document.getElementById('signup-modal-error');
             const submitButton = document.getElementById('signup-modal-submit');
-            if (!email || !password || !passwordConfirm) { errorElement.textContent = "Veuillez remplir tous les champs."; errorElement.classList.remove('hidden'); return; }
-            if (password !== passwordConfirm) { errorElement.textContent = "Les mots de passe ne correspondent pas."; errorElement.classList.remove('hidden'); return; }
-            if (password.length < 6) { errorElement.textContent = "Le mot de passe doit comporter au moins 6 caractères."; errorElement.classList.remove('hidden'); return; }
+
+            if (!email || !password || !passwordConfirm) {
+                errorElement.textContent = "Veuillez remplir tous les champs.";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            if (password !== passwordConfirm) {
+                errorElement.textContent = "Les mots de passe ne correspondent pas.";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            if (password.length < 6) {
+                errorElement.textContent = "Le mot de passe doit comporter au moins 6 caractères.";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+
             errorElement.classList.add('hidden');
             submitButton.disabled = true;
             submitButton.textContent = 'Création en cours...';
+
             try {
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 firebaseUser = userCredential.user;
+
+                isManualSignup = true; // ⭐️ On entre en mode inscription manuelle
+                await findUserByEmail(email); // ⭐️ Crée l'utilisateur dans Airtable
+
                 document.getElementById('signup-modal').classList.add('hidden');
                 document.getElementById('signup-success-modal').classList.remove('hidden');
+
             } catch (error) {
                 let message = "Une erreur est survenue. Veuillez réessayer.";
-                if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà avec cette adresse email."; }
-                else if (error.code === 'auth/invalid-email') { message = "L'adresse email est invalide."; }
+                if (error.code === 'auth/email-already-in-use') message = "Un compte existe déjà avec cette adresse email.";
+                else if (error.code === 'auth/invalid-email') message = "L'adresse email est invalide.";
                 errorElement.textContent = message;
                 errorElement.classList.remove('hidden');
             } finally {
@@ -540,15 +548,21 @@
                 submitButton.textContent = 'Créer mon compte';
             }
         });
+
         document.getElementById('signup-success-login-button').addEventListener('click', () => {
             document.getElementById('signup-success-modal').classList.add('hidden');
+            isManualSignup = false; // ⭐️ Réactiver le mode automatique
+            showDashboard(); // ⭐️ Afficher le dashboard immédiatement
         });
+
         document.getElementById('show-forgot-password-modal').addEventListener('click', () => {
             document.getElementById('forgot-password-modal').classList.remove('hidden');
         });
+
         document.getElementById('forgot-password-cancel').addEventListener('click', () => {
             document.getElementById('forgot-password-modal').classList.add('hidden');
         });
+
         document.getElementById('forgot-password-submit').addEventListener('click', async () => {
             const email = document.getElementById('forgot-password-email').value.trim();
             const errorElement = document.getElementById('forgot-password-error');
@@ -566,23 +580,25 @@
                 successElement.classList.remove('hidden');
             } catch (error) {
                 let message = "Impossible d'envoyer l'email. Veuillez vérifier l'adresse.";
-                if (error.code === 'auth/user-not-found') {
-                    message = "Aucun compte n'est associé à cette adresse email.";
-                }
+                if (error.code === 'auth/user-not-found') message = "Aucun compte n'est associé à cette adresse email.";
                 errorElement.textContent = message;
                 errorElement.classList.remove('hidden');
             }
         });
+
         document.getElementById('open-profile-modal').addEventListener('click', () => {
             document.getElementById('profile-modal').classList.remove('hidden');
-            document.getElementById('profile-email').value = firebaseUser.email;
+            document.getElementById('profile-email').value = firebaseUser?.email || '';
         });
+
         document.getElementById('close-profile-modal').addEventListener('click', () => {
             document.getElementById('profile-modal').classList.add('hidden');
         });
+
         document.getElementById('cancel-profile-button').addEventListener('click', () => {
             document.getElementById('profile-modal').classList.add('hidden');
         });
+
         document.getElementById('save-profile-button').addEventListener('click', async () => {
             const newPassword = document.getElementById('profile-password').value.trim();
             const confirmPassword = document.getElementById('profile-password-confirm').value.trim();
@@ -612,6 +628,7 @@
                 errorElement.classList.remove('hidden');
             }
         });
+
         document.getElementById('logout-button').addEventListener('click', handleLogout);
         document.getElementById('start-debrief-button').addEventListener('click', startDebrief);
     </script>
