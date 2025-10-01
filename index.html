@@ -700,15 +700,14 @@ async function findUserByEmail(email) {
             submitButton.textContent = 'Création en cours...';
 
             try {
-            try {
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-    firebaseUser = userCredential.user;
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                firebaseUser = userCredential.user;
 
-    // Appeler n8n pour créer l'utilisateur dans Airtable
-    await callN8n('createUserInAirtable', { email: email }); // <--- NOUVELLE LIGNE
+                // Créer l'utilisateur dans Airtable via n8n
+                await findUserByEmail(email);
 
-    document.getElementById('signup-modal').classList.add('hidden');
-    document.getElementById('signup-success-modal').classList.remove('hidden');
+                document.getElementById('signup-modal').classList.add('hidden');
+                document.getElementById('signup-success-modal').classList.remove('hidden');
 
             } catch (error) {
                 console.error("Erreur lors de la création du compte:", error);
@@ -861,35 +860,27 @@ async function findUserByEmail(email) {
             }
         }
 
-       // --- GESTION DE LA PERSISTANCE (VERSION CORRIGÉE) ---
-auth.onAuthStateChanged(async (user) => {
-    const loadingIndicator = document.getElementById('loading-indicator');
+        // --- GESTION DE LA PERSISTANCE ---
+        auth.onAuthStateChanged(async (user) => {
+            isCheckingAuth = false;
+            document.getElementById('loading-indicator').classList.remove('hidden');
 
-    if (user) {
-        // Un utilisateur est connecté, on affiche le loader pendant qu'on récupère ses données
-        loadingIndicator.classList.remove('hidden');
-        firebaseUser = user;
+            if (user) {
+                firebaseUser = user;
+                try {
+                    await findUserByEmail(user.email);
+                    showDashboard();
+                } catch (error) {
+                    console.error("Erreur lors de la récupération des données Airtable:", error);
+                    alert("Erreur de connexion à la base de données. Veuillez vous reconnecter.");
+                    await handleLogout();
+                }
+            } else {
+                showAuthSection();
+            }
 
-        try {
-            // On tente de récupérer les données de l'utilisateur
-            await findUserByEmail(user.email);
-            showDashboard();
-        } catch (error) {
-            // Si la récupération échoue, on informe l'utilisateur et on le déconnecte proprement
-            console.error("Erreur lors de la récupération des données Airtable:", error);
-            alert("Votre session a expiré ou la connexion à la base de données a échoué. Veuillez vous reconnecter.");
-            await handleLogout(); // Déconnecte et rafraîchit l'affichage vers la page de connexion
-        } finally {
-            // Dans tous les cas (succès ou erreur), on s'assure de cacher le loader
-            loadingIndicator.classList.add('hidden');
-        }
-    } else {
-        // Aucun utilisateur n'est connecté, on affiche directement la page de connexion
-        showAuthSection();
-        // On s'assure aussi que le loader est caché s'il était visible
-        loadingIndicator.classList.add('hidden');
-    }
-});
+            document.getElementById('loading-indicator').classList.add('hidden');
+        });
 
         // --- ÉCOUTEURS D'ÉVÉNEMENTS ---
         document.getElementById('login-button').addEventListener('click', () => {
@@ -923,7 +914,6 @@ auth.onAuthStateChanged(async (user) => {
     </script>
 </body>
 </html>
-
 
 
 
