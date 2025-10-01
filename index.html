@@ -524,19 +524,11 @@
             errorElement.classList.add('hidden');
             submitButton.disabled = true;
             submitButton.textContent = 'Création en cours...';
-    try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        firebaseUser = userCredential.user;
-
-        // ⭐️ Indiquer qu'on est en mode inscription manuelle
-        isManualSignup = true;
-
-        // ⭐️ Appeler manuellement findUserByEmail APRÈS la création Firebase
-        await findUserByEmail(email); // Ceci crée l'utilisateur dans Airtable via n8n
-
-        // ✅ Tout s'est bien passé : on peut afficher le succès
-        document.getElementById('signup-modal').classList.add('hidden');
-        document.getElementById('signup-success-modal').classList.remove('hidden');
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                firebaseUser = userCredential.user;
+                document.getElementById('signup-modal').classList.add('hidden');
+                document.getElementById('signup-success-modal').classList.remove('hidden');
             } catch (error) {
                 let message = "Une erreur est survenue. Veuillez réessayer.";
                 if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà avec cette adresse email."; }
@@ -550,13 +542,6 @@
         });
         document.getElementById('signup-success-login-button').addEventListener('click', () => {
             document.getElementById('signup-success-modal').classList.add('hidden');
-
- // ⭐️ Réactiver le mode automatique
-    isManualSignup = false;
-    
-    // ⭐️ Afficher le dashboard immédiatement (car userRecord est déjà chargé)
-    showDashboard();
-            
         });
         document.getElementById('show-forgot-password-modal').addEventListener('click', () => {
             document.getElementById('forgot-password-modal').classList.remove('hidden');
