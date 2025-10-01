@@ -273,21 +273,36 @@
             }
         }
         // --- FONCTION AIRTABLE (CORRIGÉE POUR LA STRUCTURE DE DONNÉES "PLATE") ---
-        async function findUserByEmail(email) {
-            let rawResult = await callN8n('findOrCreateUser', { email });
-            let potentialRecord = Array.isArray(rawResult) ? rawResult[0] : rawResult;
-            if (potentialRecord && potentialRecord.id && potentialRecord.Email) {
-                const { id, createdTime, ...fields } = potentialRecord;
-                userRecord = {
-                    id: id,
-                    createdTime: createdTime,
-                    fields: fields
-                };
-            } else {
-                console.error("Réponse inattendue ou mal formatée de n8n:", potentialRecord);
-                throw new Error("La réponse de la base de données est invalide.");
-            }
+       // --- FONCTION AIRTABLE (CORRIGÉE POUR LA STRUCTURE DE DONNÉES "PLATE") ---
+async function findUserByEmail(email) {
+    try {
+        const rawResult = await callN8n('findOrCreateUser', { email });
+        // Pour un utilisateur existant, n8n renvoie un tableau. Pour un nouveau, un objet.
+        // Cette ligne gère les deux cas.
+        const potentialRecord = Array.isArray(rawResult) ? rawResult[0] : rawResult;
+
+        // VÉRIFICATION CORRIGÉE : On regarde maintenant dans l'objet "fields"
+        if (potentialRecord && potentialRecord.id && potentialRecord.fields && potentialRecord.fields.Email) {
+            
+            // ASSIGNATION CORRIGÉE : On utilise directement la structure reçue
+            userRecord = {
+                id: potentialRecord.id,
+                createdTime: potentialRecord.createdTime,
+                fields: potentialRecord.fields 
+            };
+            console.log("Utilisateur trouvé ou créé avec succès :", userRecord);
+
+        } else {
+            // L'erreur est déclenchée si la réponse de n8n est invalide
+            console.error("Réponse inattendue ou mal formatée de n8n:", potentialRecord);
+            throw new Error("La réponse de la base de données est invalide.");
         }
+    } catch (error) {
+        console.error("Erreur dans findUserByEmail:", error);
+        // On propage l'erreur pour qu'elle soit attrapée par le bloc d'inscription
+        throw error; 
+    }
+}
         // Ajouter un lien
         async function addLink(fieldName, inputId) {
             if (!userRecord) return;
@@ -636,4 +651,5 @@ document.getElementById('signup-modal-submit').addEventListener('click', async (
     </script>
 </body>
 </html>
+
 
