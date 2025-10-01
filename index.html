@@ -528,7 +528,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const cred = await auth.signInWithEmailAndPassword(email, password);
             firebaseUser = cred.user;
-            await findUserByEmail(email);
+            
             showDashboard();
 
         } catch (err) {
@@ -694,5 +694,6 @@ document.addEventListener("DOMContentLoaded", () => {
     </script>
 </body>
 </html>
+
 
 
