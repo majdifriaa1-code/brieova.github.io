@@ -572,7 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const cred = await auth.createUserWithEmailAndPassword(email, password);
             firebaseUser = cred.user;
-            await findUserByEmail(email);
+            
 
             document.getElementById("signup-modal").classList.add("hidden");
             document.getElementById("signup-success-modal").classList.remove("hidden");
@@ -694,6 +694,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </script>
 </body>
 </html>
+
 
 
 
