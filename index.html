@@ -512,34 +512,53 @@
         document.getElementById('signup-modal-cancel').addEventListener('click', () => {
             document.getElementById('signup-modal').classList.add('hidden');
         });
-        document.getElementById('signup-modal-submit').addEventListener('click', async () => {
-            const email = document.getElementById('signup-modal-email').value.trim();
-            const password = document.getElementById('signup-modal-password').value.trim();
-            const passwordConfirm = document.getElementById('signup-modal-password-confirm').value.trim();
-            const errorElement = document.getElementById('signup-modal-error');
-            const submitButton = document.getElementById('signup-modal-submit');
-            if (!email || !password || !passwordConfirm) { errorElement.textContent = "Veuillez remplir tous les champs."; errorElement.classList.remove('hidden'); return; }
-            if (password !== passwordConfirm) { errorElement.textContent = "Les mots de passe ne correspondent pas."; errorElement.classList.remove('hidden'); return; }
-            if (password.length < 6) { errorElement.textContent = "Le mot de passe doit comporter au moins 6 caractères."; errorElement.classList.remove('hidden'); return; }
-            errorElement.classList.add('hidden');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Création en cours...';
-            try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                firebaseUser = userCredential.user;
-                document.getElementById('signup-modal').classList.add('hidden');
-                document.getElementById('signup-success-modal').classList.remove('hidden');
-            } catch (error) {
-                let message = "Une erreur est survenue. Veuillez réessayer.";
-                if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà avec cette adresse email."; }
-                else if (error.code === 'auth/invalid-email') { message = "L'adresse email est invalide."; }
-                errorElement.textContent = message;
-                errorElement.classList.remove('hidden');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Créer mon compte';
-            }
-        });
+       // Le nouveau code corrigé
+document.getElementById('signup-modal-submit').addEventListener('click', async () => {
+    const email = document.getElementById('signup-modal-email').value.trim();
+    const password = document.getElementById('signup-modal-password').value.trim();
+    const passwordConfirm = document.getElementById('signup-modal-password-confirm').value.trim();
+    const errorElement = document.getElementById('signup-modal-error');
+    const submitButton = document.getElementById('signup-modal-submit');
+
+    // ... validations (inchangées) ...
+    if (!email || !password || !passwordConfirm) { errorElement.textContent = "Veuillez remplir tous les champs."; errorElement.classList.remove('hidden'); return; }
+    if (password !== passwordConfirm) { errorElement.textContent = "Les mots de passe ne correspondent pas."; errorElement.classList.remove('hidden'); return; }
+    if (password.length < 6) { errorElement.textContent = "Le mot de passe doit comporter au moins 6 caractères."; errorElement.classList.remove('hidden'); return; }
+    errorElement.classList.add('hidden');
+    
+    submitButton.disabled = true;
+    submitButton.textContent = 'Création en cours...';
+
+    try {
+        // 1. Créer l'utilisateur dans Firebase
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        firebaseUser = userCredential.user;
+
+        // 2. Tenter de créer l'enregistrement dans Airtable via n8n
+        // C'est l'étape cruciale qui manquait !
+        await findUserByEmail(email);
+
+        // 3. Si tout a réussi, fermer la modale et afficher directement le dashboard
+        document.getElementById('signup-modal').classList.add('hidden');
+        showDashboard(); // Connexion directe !
+
+    } catch (error) {
+        // Gère les erreurs de Firebase ET de n8n/Airtable
+        let message = "Une erreur est survenue. Veuillez réessayer.";
+        if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà avec cette adresse email."; }
+        else if (error.code === 'auth/invalid-email') { message = "L'adresse email est invalide."; }
+        // On peut aussi ajouter un message pour l'erreur de findUserByEmail
+        else if (error.message.includes("base de données")) { message = "Impossible de créer votre profil dans notre base de données. Veuillez réessayer."; }
+        
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
+
+    } finally {
+        // Réactiver le bouton dans tous les cas
+        submitButton.disabled = false;
+        submitButton.textContent = 'Créer mon compte';
+    }
+});
         document.getElementById('signup-success-login-button').addEventListener('click', () => {
             document.getElementById('signup-success-modal').classList.add('hidden');
         });
@@ -617,3 +636,4 @@
     </script>
 </body>
 </html>
+
