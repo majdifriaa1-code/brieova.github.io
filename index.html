@@ -258,35 +258,22 @@
         if (!response.ok) throw new Error(`Erreur n8n: ${response.status}`);
         return response.json();
     }
-
-    // <-- MODIFICATION ULTIME : La fonction "universelle" qui comprend tous les formats
+    
+    // --- FONCTIONS DE GESTION DES DONNÉES ---
     async function getUserDataByEmail(email) {
         const rawResult = await callN8n('findUser', { email });
-        
         let potentialRecord = Array.isArray(rawResult) && rawResult.length > 0 ? rawResult[0] : rawResult;
 
         if (!potentialRecord || typeof potentialRecord !== 'object' || !potentialRecord.id) {
             throw new Error("Utilisateur non trouvé ou réponse invalide.");
         }
         
-        // Logique "universelle" : gère le format imbriqué ET le format plat
         if (potentialRecord.fields && potentialRecord.fields.Email) {
-            // CAS 1 : Format standard avec sous-dossier "fields"
-            userRecord = {
-                id: potentialRecord.id,
-                createdTime: potentialRecord.createdTime,
-                fields: potentialRecord.fields 
-            };
+            userRecord = { id: potentialRecord.id, createdTime: potentialRecord.createdTime, fields: potentialRecord.fields };
         } else if (potentialRecord.Email) {
-            // CAS 2 : Format "plat" (sans le sous-dossier "fields")
             const { id, createdTime, ...fields } = potentialRecord;
-            userRecord = {
-                id: id,
-                createdTime: createdTime,
-                fields: fields // On reconstruit un objet "fields"
-            };
+            userRecord = { id: id, createdTime: createdTime, fields: fields };
         } else {
-            // Si aucun des formats n'est reconnu
             throw new Error("La réponse de la base de données est mal formatée.");
         }
     }
@@ -298,24 +285,115 @@
         }
     }
 
-    // ... (Le reste du script est identique et correct) ...
-    function showAuthSection() {
-        document.getElementById('auth-section').classList.remove('hidden');
-        document.getElementById('dashboard-section').classList.add('hidden');
+    async function addLink(fieldName, inputId) {
+        if (!userRecord) return;
+        const inputElement = document.getElementById(inputId);
+        const newLinks = inputElement.value.trim();
+        if (!newLinks) return;
+
+        const existingLinks = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+        const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
+        const allLinks = [...new Set([...existingLinks, ...newLinksArray])].join(',');
+        
+        try {
+            const updatedRecord = await callN8n('addLink', {
+                recordId: userRecord.id,
+                fieldName: fieldName,
+                allLinks: allLinks
+            });
+            // La réponse d'une mise à jour peut être plate, on la restructure
+            if (updatedRecord.id && updatedRecord.Email) {
+                 const { id, createdTime, ...fields } = updatedRecord;
+                 userRecord = { id, createdTime, fields };
+            } else {
+                 userRecord = updatedRecord;
+            }
+            inputElement.value = '';
+            showDashboard(); // Met à jour l'affichage
+        } catch (error) {
+            alert("Impossible de sauvegarder le lien. Erreur : " + error.message);
+        }
     }
+
+    // --- FONCTIONS D'AFFICHAGE (RESTAURÉES) ---
+
+    // <-- FONCTION RESTAURÉE : Gère l'affichage complet du tableau de bord
+    function showDashboard() {
+        if (!userRecord || !userRecord.fields || !firebaseUser) {
+            handleLogout();
+            return;
+        }
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('dashboard-section').classList.remove('hidden');
+        document.getElementById('user-email').textContent = firebaseUser.email;
+        
+        // Affichage du statut
+        const userStatusElement = document.getElementById('user-status');
+        const status = userRecord.fields.Status || 'Inconnu';
+        let statusColorClass = 'bg-gray-100 text-gray-800';
+        if (status === 'Beta') { statusColorClass = 'bg-blue-100 text-blue-800'; } 
+        else if (status === 'Premium') { statusColorClass = 'bg-yellow-100 text-yellow-800'; }
+        userStatusElement.className = `status-badge ${statusColorClass}`;
+        userStatusElement.textContent = status;
+
+        // Affichage des débriefs restants
+        const debriefsRemainingElement = document.getElementById('debriefs-remaining');
+        const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
+        let debriefsColorClass = 'bg-green-100 text-green-800';
+        if (remaining <= 0) { debriefsColorClass = 'bg-red-100 text-red-800'; } 
+        else if (remaining <= 2) { debriefsColorClass = 'bg-yellow-100 text-yellow-800'; }
+        debriefsRemainingElement.className = `status-badge ${debriefsColorClass}`;
+        debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
+        
+        // Mettre à jour le tableau et la limite d'utilisation
+        updateSourcesTable();
+        updateUsageLimit();
+    }
+
+    // <-- FONCTION RESTAURÉE : Met à jour la table des liens
+    function updateSourcesTable() {
+        const tableBody = document.getElementById('sources-table');
+        tableBody.innerHTML = '';
+        const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
+        fieldsToShow.forEach(fieldName => {
+            const row = document.createElement('tr');
+            const linksArray = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+            let linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
+            if (linksArray.length > 0) {
+                linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
+                linksArray.forEach(link => { linksHtml += `<span>${link}</span><br/>`; });
+                linksHtml += '</div>';
+            }
+            row.innerHTML = `<td class="table-cell font-semibold">${fieldName.replace('Links', '').replace('RSS', '')}</td><td class="table-cell">${linksHtml}</td><td class="table-cell"><button onclick="clearLinks('${fieldName}')" class="btn btn-secondary text-sm">Vider</button></td>`;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // <-- FONCTION RESTAURÉE : Gère le bouton "Lancer le Débrief"
+    function updateUsageLimit() {
+        const usageElement = document.getElementById('usage-limit');
+        const debriefButton = document.getElementById('start-debrief-button');
+        const debriefsRemaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
+
+        if (userRecord.fields.Status === 'Free' || !userRecord.fields.Status) {
+            usageElement.textContent = `Offre Gratuite : Il vous reste ${debriefsRemaining} débrief(s).`;
+            debriefButton.disabled = debriefsRemaining <= 0;
+            debriefButton.textContent = debriefsRemaining <= 0 ? 'Limite atteinte' : 'Lancer le Débrief';
+        } else {
+            usageElement.textContent = `Plan ${userRecord.fields.Status} : Profitez de débriefs illimités !`;
+            debriefButton.disabled = false;
+            debriefButton.textContent = 'Lancer le Débrief';
+        }
+    }
+
     async function handleLogout() {
         await auth.signOut();
         firebaseUser = null;
         userRecord = null;
         showAuthSection();
     }
-    function showDashboard() {
-        if (!userRecord || !firebaseUser) { handleLogout(); return; }
-        document.getElementById('auth-section').classList.add('hidden');
-        document.getElementById('dashboard-section').classList.remove('hidden');
-        document.getElementById('user-email').textContent = firebaseUser.email;
-    }
-
+    
+    // --- GESTION DE L'ÉTAT ET ÉVÉNEMENTS ---
     auth.onAuthStateChanged(async (user) => {
         if (isProcessingAuth) return;
         const loadingIndicator = document.getElementById('loading-indicator');
@@ -326,7 +404,6 @@
                 await getUserDataByEmail(user.email);
                 showDashboard();
             } catch (error) {
-                console.error("Session invalide, déconnexion forcée:", error);
                 await handleLogout();
             }
         } else {
@@ -340,22 +417,16 @@
         const password = document.getElementById('auth-password').value.trim();
         const errorElement = document.getElementById('auth-error');
         const loginButton = document.getElementById('login-button');
-
         errorElement.classList.add('hidden');
         loginButton.disabled = true;
         isProcessingAuth = true;
-
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             firebaseUser = userCredential.user;
             await getUserDataByEmail(email);
             showDashboard();
         } catch (error) {
-            let message = "Email ou mot de passe incorrect.";
-            if (error.message.includes("base de données") || error.message.includes("trouvé")) {
-                message = "Erreur de connexion à la base de données.";
-            }
-            errorElement.textContent = message;
+            errorElement.textContent = "Erreur de connexion à la base de données.";
             errorElement.classList.remove('hidden');
         } finally {
             loginButton.disabled = false;
@@ -368,24 +439,17 @@
         const password = document.getElementById('signup-modal-password').value.trim();
         const errorElement = document.getElementById('signup-modal-error');
         const submitButton = document.getElementById('signup-modal-submit');
-        
         errorElement.classList.add('hidden');
         submitButton.disabled = true;
         isProcessingAuth = true;
-
         try {
             await auth.createUserWithEmailAndPassword(email, password);
             await createUserData(email);
-            
             document.getElementById('signup-modal').classList.add('hidden');
-            document.getElementById('signup-success-modal').classList.remove('hidden');
+            document.getElementById('signup-success-modal').remove('hidden');
         } catch (error) {
             let message = "Une erreur est survenue.";
-            if (error.code === 'auth/email-already-in-use') {
-                message = "Un compte existe déjà avec cette adresse email.";
-            } else if (error.message.includes("création du profil")) {
-                message = "Impossible de créer le profil dans la base de données.";
-            }
+            if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà."; }
             errorElement.textContent = message;
             errorElement.classList.remove('hidden');
         } finally {
@@ -401,6 +465,7 @@
 </script>
 </body>
 </html>
+
 
 
 
