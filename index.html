@@ -259,7 +259,7 @@
         return response.json();
     }
     
-    // --- FONCTIONS DE GESTION DES DONNÉES ---
+    // --- FONCTIONS DE GESTION DES DONNÉES UTILISATEUR ---
     async function getUserDataByEmail(email) {
         const rawResult = await callN8n('findUser', { email });
         let potentialRecord = Array.isArray(rawResult) && rawResult.length > 0 ? rawResult[0] : rawResult;
@@ -280,42 +280,32 @@
     
     async function createUserData(email) {
         const newUserRecord = await callN8n('createUser', { email });
-        if (!newUserRecord || !newUserRecord.id) {
-            throw new Error("La création du profil a échoué.");
-        }
+        if (!newUserRecord || !newUserRecord.id) throw new Error("La création du profil a échoué.");
     }
 
+    // --- FONCTIONS DU DASHBOARD (COMPLÈTES ET RESTAURÉES) ---
     async function addLink(fieldName, inputId) {
         if (!userRecord) return;
         const inputElement = document.getElementById(inputId);
         const newLinks = inputElement.value.trim();
         if (!newLinks) return;
-
         const existingLinks = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
         const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
         const allLinks = [...new Set([...existingLinks, ...newLinksArray])].join(',');
-        
         try {
-            const updatedRecord = await callN8n('addLink', {
-                recordId: userRecord.id,
-                fieldName: fieldName,
-                allLinks: allLinks
-            });
-            // La réponse d'une mise à jour peut être plate, on la restructure
-            if (updatedRecord.id && updatedRecord.Email) {
+            const updatedRecord = await callN8n('addLink', { recordId: userRecord.id, fieldName: fieldName, allLinks: allLinks });
+            if (updatedRecord && updatedRecord.id) {
                  const { id, createdTime, ...fields } = updatedRecord;
                  userRecord = { id, createdTime, fields };
-            } else {
-                 userRecord = updatedRecord;
-            }
+            } else { userRecord = updatedRecord; }
             inputElement.value = '';
-            showDashboard(); // Met à jour l'affichage
+            showDashboard();
         } catch (error) {
-            alert("Impossible de sauvegarder le lien. Erreur : " + error.message);
+            alert("Impossible de sauvegarder le lien: " + error.message);
         }
     }
 
- // Vider les liens d'un champ
+  // Vider les liens d'un champ
         async function clearLinks(fieldName) {
             if (!userRecord) return;
             try {
@@ -331,22 +321,36 @@
             }
         }
 
-
-
-    
-    // --- FONCTIONS D'AFFICHAGE (RESTAURÉES) ---
-
-    // <-- FONCTION RESTAURÉE : Gère l'affichage complet du tableau de bord
-    function showDashboard() {
-        if (!userRecord || !userRecord.fields || !firebaseUser) {
-            handleLogout();
+    async function startDebrief() {
+        if (!userRecord) return;
+        const hasLinks = userRecord.fields['Article RSS Links'] || userRecord.fields['YouTube Links'] || userRecord.fields['Podcast RSS Links'];
+        if (!hasLinks) {
+            alert("Vous devez ajouter au moins un lien avant de lancer le débrief.");
             return;
         }
+        const debriefButton = document.getElementById('start-debrief-button');
+        debriefButton.disabled = true;
+        debriefButton.textContent = 'En cours...';
+        try {
+            const updatedRecord = await callN8n('startDebrief', { recordId: userRecord.id });
+            if (updatedRecord && updatedRecord.id) {
+                 const { id, createdTime, ...fields } = updatedRecord;
+                 userRecord = { id, createdTime, fields };
+            } else { userRecord = updatedRecord; }
+            showDashboard();
+            document.getElementById('notification-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('notification-modal').classList.add('hidden'), 5000);
+        } catch (error) {
+            alert("Erreur lors du lancement du débrief: " + error.message);
+        }
+    }
+
+    // --- FONCTIONS D'AFFICHAGE ---
+    function showDashboard() {
+        if (!userRecord || !userRecord.fields || !firebaseUser) { handleLogout(); return; }
         document.getElementById('auth-section').classList.add('hidden');
         document.getElementById('dashboard-section').classList.remove('hidden');
         document.getElementById('user-email').textContent = firebaseUser.email;
-        
-        // Affichage du statut
         const userStatusElement = document.getElementById('user-status');
         const status = userRecord.fields.Status || 'Inconnu';
         let statusColorClass = 'bg-gray-100 text-gray-800';
@@ -354,8 +358,6 @@
         else if (status === 'Premium') { statusColorClass = 'bg-yellow-100 text-yellow-800'; }
         userStatusElement.className = `status-badge ${statusColorClass}`;
         userStatusElement.textContent = status;
-
-        // Affichage des débriefs restants
         const debriefsRemainingElement = document.getElementById('debriefs-remaining');
         const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
         let debriefsColorClass = 'bg-green-100 text-green-800';
@@ -363,13 +365,9 @@
         else if (remaining <= 2) { debriefsColorClass = 'bg-yellow-100 text-yellow-800'; }
         debriefsRemainingElement.className = `status-badge ${debriefsColorClass}`;
         debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
-        
-        // Mettre à jour le tableau et la limite d'utilisation
         updateSourcesTable();
         updateUsageLimit();
     }
-
-    // <-- FONCTION RESTAURÉE : Met à jour la table des liens
     function updateSourcesTable() {
         const tableBody = document.getElementById('sources-table');
         tableBody.innerHTML = '';
@@ -387,13 +385,10 @@
             tableBody.appendChild(row);
         });
     }
-
-    // <-- FONCTION RESTAURÉE : Gère le bouton "Lancer le Débrief"
     function updateUsageLimit() {
         const usageElement = document.getElementById('usage-limit');
         const debriefButton = document.getElementById('start-debrief-button');
         const debriefsRemaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
-
         if (userRecord.fields.Status === 'Free' || !userRecord.fields.Status) {
             usageElement.textContent = `Offre Gratuite : Il vous reste ${debriefsRemaining} débrief(s).`;
             debriefButton.disabled = debriefsRemaining <= 0;
@@ -404,12 +399,12 @@
             debriefButton.textContent = 'Lancer le Débrief';
         }
     }
-
     async function handleLogout() {
         await auth.signOut();
         firebaseUser = null;
         userRecord = null;
-        showAuthSection();
+        document.getElementById('auth-section').classList.remove('hidden');
+        document.getElementById('dashboard-section').classList.add('hidden');
     }
     
     // --- GESTION DE L'ÉTAT ET ÉVÉNEMENTS ---
@@ -422,15 +417,16 @@
             try {
                 await getUserDataByEmail(user.email);
                 showDashboard();
-            } catch (error) {
-                await handleLogout();
-            }
+            } catch (error) { await handleLogout(); }
         } else {
-            showAuthSection();
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
         }
         loadingIndicator.classList.add('hidden');
     });
 
+    // --- ÉCOUTEURS D'ÉVÉNEMENTS (COMPLETS ET RESTAURÉS) ---
+    // Connexion
     document.getElementById('login-button').addEventListener('click', async () => {
         const email = document.getElementById('auth-email').value.trim();
         const password = document.getElementById('auth-password').value.trim();
@@ -445,7 +441,7 @@
             await getUserDataByEmail(email);
             showDashboard();
         } catch (error) {
-            errorElement.textContent = "Erreur de connexion à la base de données.";
+            errorElement.textContent = "Email, mot de passe ou connexion base de données incorrect.";
             errorElement.classList.remove('hidden');
         } finally {
             loginButton.disabled = false;
@@ -453,6 +449,7 @@
         }
     });
 
+    // Inscription
     document.getElementById('signup-modal-submit').addEventListener('click', async () => {
         const email = document.getElementById('signup-modal-email').value.trim();
         const password = document.getElementById('signup-modal-password').value.trim();
@@ -465,7 +462,7 @@
             await auth.createUserWithEmailAndPassword(email, password);
             await createUserData(email);
             document.getElementById('signup-modal').classList.add('hidden');
-            document.getElementById('signup-success-modal').remove('hidden');
+            document.getElementById('signup-success-modal').classList.remove('hidden');
         } catch (error) {
             let message = "Une erreur est survenue.";
             if (error.code === 'auth/email-already-in-use') { message = "Un compte existe déjà."; }
@@ -477,13 +474,60 @@
         }
     });
 
+    // Modale Inscription
     document.getElementById('show-signup-modal-button').addEventListener('click', () => document.getElementById('signup-modal').classList.remove('hidden'));
     document.getElementById('signup-modal-cancel').addEventListener('click', () => document.getElementById('signup-modal').classList.add('hidden'));
     document.getElementById('signup-success-login-button').addEventListener('click', () => document.getElementById('signup-success-modal').classList.add('hidden'));
+
+    // Modale Mot de passe oublié
+    document.getElementById('show-forgot-password-modal').addEventListener('click', () => document.getElementById('forgot-password-modal').classList.remove('hidden'));
+    document.getElementById('forgot-password-cancel').addEventListener('click', () => document.getElementById('forgot-password-modal').classList.add('hidden'));
+    document.getElementById('forgot-password-submit').addEventListener('click', async () => {
+        const email = document.getElementById('forgot-password-email').value;
+        try {
+            await auth.sendPasswordResetEmail(email);
+            document.getElementById('forgot-password-success').textContent = 'Email envoyé !';
+            document.getElementById('forgot-password-success').classList.remove('hidden');
+        } catch (error) {
+            document.getElementById('forgot-password-error').textContent = error.message;
+            document.getElementById('forgot-password-error').classList.remove('hidden');
+        }
+    });
+
+    // Modale Profil
+    document.getElementById('open-profile-modal').addEventListener('click', () => {
+        document.getElementById('profile-modal').classList.remove('hidden');
+        document.getElementById('profile-email').value = firebaseUser.email;
+    });
+    document.getElementById('close-profile-modal').addEventListener('click', () => document.getElementById('profile-modal').classList.add('hidden'));
+    document.getElementById('cancel-profile-button').addEventListener('click', () => document.getElementById('profile-modal').classList.add('hidden'));
+    document.getElementById('save-profile-button').addEventListener('click', async () => {
+        const password = document.getElementById('profile-password').value;
+        const confirm = document.getElementById('profile-password-confirm').value;
+        const errorElement = document.getElementById('profile-error');
+        if (password.length > 0) {
+            if (password !== confirm) {
+                errorElement.textContent = "Les mots de passe ne correspondent pas.";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            try {
+                await firebaseUser.updatePassword(password);
+                document.getElementById('profile-modal').classList.add('hidden');
+            } catch (error) {
+                errorElement.textContent = "Erreur: " + error.message;
+                errorElement.classList.remove('hidden');
+            }
+        }
+    });
+
+    // Boutons du Dashboard
     document.getElementById('logout-button').addEventListener('click', handleLogout);
+    document.getElementById('start-debrief-button').addEventListener('click', startDebrief);
 </script>
 </body>
 </html>
+
 
 
 
