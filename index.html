@@ -178,10 +178,10 @@
             </div>
            <div class="card">
     <h3 class="text-xl font-semibold text-gray-700 mb-4">Podcasts</h3>
-    <div class="flex space-x-2">
-        <input type="url" id="podcast-link-input" placeholder="Collez vos liens (séparés par une virgule)" class="input-field flex-grow">
-        <input type="text" id="podcast-title-input" placeholder="Titre du podcast" class="input-field w-1/3">
-        <button onclick="addPodcastLink()" class="btn btn-secondary">Ajouter</button>
+    <div class="flex flex-col md:flex-row md:space-x-2 gap-2">
+        <input type="url" id="podcast-link-input" placeholder="Collez le lien du podcast" class="input-field flex-grow">
+        <input type="text" id="podcast-title-input" placeholder="Entrez le titre du podcast" class="input-field flex-grow">
+        <button onclick="addPodcast()" class="btn btn-secondary">Ajouter</button>
     </div>
 </div>
             </div>
@@ -191,12 +191,11 @@
 <thead>
     <tr>
         <th class="table-cell font-semibold text-gray-600">Type</th>
+        <th class="table-cell font-semibold text-gray-600">Titre</th>
         <th class="table-cell font-semibold text-gray-600">Liens</th>
-        <th class="table-cell font-semibold text-gray-600">Titre</th> <!-- Nouvelle colonne -->
         <th class="table-cell font-semibold text-gray-600">Actions</th>
     </tr>
-</thead>
-                    <tbody id="sources-table"></tbody>
+</thead>                    <tbody id="sources-table"></tbody>
                 </table>
             </div>
             <div class="text-center">
@@ -330,161 +329,123 @@ async function callN8n(action, data = {}) {
 
 
     // --- VOS FONCTIONS ORIGINALES (INTACTES) ---
-   // --- FONCTION MODIFIÉE : addLink (pour Articles et YouTube)
-async function addLink(fieldName, inputId) {
-    if (!userRecord) return;
-    const inputElement = document.getElementById(inputId);
-    const newLinks = inputElement.value.trim();
-    if (!newLinks) return;
-    const existingLinks = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
-    const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
-    const allLinks = [...new Set([...existingLinks, ...newLinksArray])].join(',');
-    try {
-        const updatedRecord = await callN8n('addLink', {
-            recordId: userRecord.id,
-            fieldName: fieldName,
-            allLinks: allLinks
-        });
-        userRecord = updatedRecord;
-        inputElement.value = '';
-        updateSourcesTable();
-        updateUsageLimit();
-    } catch (error) {
-        alert("Impossible de sauvegarder le lien. Erreur : " + error.message);
-    }
-}
-
-// --- NOUVELLE FONCTION : addPodcastLink (gestion lien + titre)
-async function addPodcastLink() {
-    if (!userRecord) return;
-
-    const linkInput = document.getElementById('podcast-link-input');
-    const titleInput = document.getElementById('podcast-title-input');
-
-    const newLinks = linkInput.value.trim();
-    const newTitles = titleInput.value.trim();
-
-    if (!newLinks) {
-        alert("Veuillez entrer au moins un lien.");
-        return;
-    }
-
-    // Récupérer les liens existants
-    const existingLinks = userRecord.fields['Podcast RSS Links'] ? String(userRecord.fields['Podcast RSS Links']).split(',').filter(Boolean) : [];
-    const existingTitles = userRecord.fields['Podcast title'] ? String(userRecord.fields['Podcast title']).split(',').filter(Boolean) : [];
-
-    // Ajouter les nouveaux liens et titres
-    const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
-    const newTitlesArray = newTitles.split(',').map(s => s.trim()).filter(Boolean);
-
-    // Si le nombre de titres est inférieur au nombre de liens, on complète avec des chaînes vides
-    while (newTitlesArray.length < newLinksArray.length) {
-        newTitlesArray.push('');
-    }
-
-    // Fusionner les anciens et nouveaux éléments
-    const allLinks = [...new Set([...existingLinks, ...newLinksArray])].join(',');
-    const allTitles = [...existingTitles, ...newTitlesArray].slice(0, existingLinks.length + newLinksArray.length).join(',');
-
-    try {
-        const updatedRecord = await callN8n('addLink', {
-            recordId: userRecord.id,
-            fieldName: 'Podcast RSS Links',
-            allLinks: allLinks
-        });
-
-        // Mettre à jour le champ "Podcast title"
-        const updatedRecordWithTitles = await callN8n('addLink', {
-            recordId: userRecord.id,
-            fieldName: 'Podcast title',
-            allLinks: allTitles
-        });
-
-        userRecord = updatedRecordWithTitles; // On met à jour avec le dernier état
-
-        // Vider les champs
-        linkInput.value = '';
-        titleInput.value = '';
-
-        updateSourcesTable();
-        updateUsageLimit();
-    } catch (error) {
-        alert("Impossible de sauvegarder le lien ou le titre. Erreur : " + error.message);
-    }
-}
-
- // Vider les liens d'un champ
-   // --- FONCTION MODIFIÉE : clearLinks
-async function clearLinks(fieldName) {
-    if (!userRecord) return;
-    try {
-        const updatedRecord = await callN8n('clearLinks', {
-            recordId: userRecord.id,
-            fieldName: fieldName
-        });
-
-        // Si on vide les liens podcast, on vide aussi les titres
-        if (fieldName === 'Podcast RSS Links') {
-            const updatedRecordWithTitlesCleared = await callN8n('clearLinks', {
-                recordId: userRecord.id,
-                fieldName: 'Podcast title'
-            });
-            userRecord = updatedRecordWithTitlesCleared;
-        } else {
-            userRecord = updatedRecord;
+    async function addLink(fieldName, inputId) {
+        if (!userRecord) return;
+        const inputElement = document.getElementById(inputId);
+        const newLinks = inputElement.value.trim();
+        if (!newLinks) return;
+        const existingLinks = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+        const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
+        const allLinks = [...new Set([...existingLinks, ...newLinksArray])].join(',');
+        try {
+            const updatedRecord = await callN8n('addLink', { recordId: userRecord.id, fieldName: fieldName, allLinks: allLinks });
+            updateLocalUserRecord(updatedRecord);
+            inputElement.value = '';
+            showDashboard();
+        } catch (error) {
+            alert("Impossible de sauvegarder le lien. Erreur : " + error.message);
         }
+    }
 
-        updateSourcesTable();
-        updateUsageLimit();
+async function addPodcast() {
+    if (!userRecord) return;
+    const podcastLink = document.getElementById('podcast-link-input').value.trim();
+    const podcastTitle = document.getElementById('podcast-title-input').value.trim();
+
+    if (!podcastLink || !podcastTitle) {
+        alert("Veuillez remplir à la fois le lien et le titre du podcast.");
+        return;
+    }
+
+    try {
+        // On appelle une nouvelle action 'addPodcast' dans n8n
+        const updatedRecord = await callN8n('addPodcast', {
+            recordId: userRecord.id,
+            podcastLink: podcastLink,
+            podcastTitle: podcastTitle
+        });
+        updateLocalUserRecord(updatedRecord);
+        document.getElementById('podcast-link-input').value = '';
+        document.getElementById('podcast-title-input').value = '';
+        showDashboard();
     } catch (error) {
-        alert("Impossible de vider les liens. Erreur : " + error.message);
+        alert("Impossible de sauvegarder le podcast. Erreur : " + error.message);
     }
 }
 
-function updateSourcesTable() {
-    if (!userRecord || !userRecord.fields) {
-        console.warn("userRecord ou userRecord.fields est undefined. Impossible de mettre à jour le tableau.");
-        return;
+
+async function clearPodcast() {
+    if (!userRecord) return;
+    try {
+        // On appelle une nouvelle action 'clearPodcast'
+        const updatedRecord = await callN8n('clearPodcast', { recordId: userRecord.id });
+        updateLocalUserRecord(updatedRecord);
+        showDashboard();
+    } catch (error) {
+        alert("Impossible de vider les liens du podcast. Erreur : " + error.message);
     }
-    const tableBody = document.getElementById('sources-table');
-    tableBody.innerHTML = '';
-
-    const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
-    fieldsToShow.forEach(fieldName => {
-        const row = document.createElement('tr');
-        const linksArray = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
-        let linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
-        let titlesHtml = ''; // Nouveau : pour les titres
-
-        if (linksArray.length > 0) {
-            linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
-            linksArray.forEach(link => {
-                linksHtml += `<span>${link}</span><br/>`;
-            });
-            linksHtml += '</div>';
-
-            // Si c'est un podcast, afficher les titres
-            if (fieldName === 'Podcast RSS Links') {
-                const titlesArray = userRecord.fields['Podcast title'] ? String(userRecord.fields['Podcast title']).split(',').filter(Boolean) : [];
-                titlesHtml = '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
-                for (let i = 0; i < Math.min(linksArray.length, titlesArray.length); i++) {
-                    titlesHtml += `<span>${titlesArray[i] || 'Sans titre'}</span><br/>`;
-                }
-                titlesHtml += '</div>';
+}
+    
+ // Vider les liens d'un champ
+        async function clearLinks(fieldName) {
+            if (!userRecord) return;
+            try {
+                const updatedRecord = await callN8n('clearLinks', {
+                    recordId: userRecord.id,
+                    fieldName: fieldName
+                });
+                userRecord = updatedRecord;
+                updateSourcesTable();
+                updateUsageLimit();
+            } catch (error) {
+                alert("Impossible de vider les liens. Erreur : " + error.message);
             }
         }
 
-        // Déterminer le nom du type
-        let typeName = fieldName.replace('Links', '').replace('RSS ', '');
-        if (typeName === 'Podcast RSS') typeName = 'Podcast';
+  function updateSourcesTable() {
+    if (!userRecord || !userRecord.fields) return;
+    const tableBody = document.getElementById('sources-table');
+    tableBody.innerHTML = '';
+    const fieldsToShow = ['Article RSS Links', 'YouTube Links', 'Podcast RSS Links'];
 
-        // Construire la ligne du tableau
+    fieldsToShow.forEach(fieldName => {
+        const row = document.createElement('tr');
+        let linksHtml = '';
+        let actionButtonHtml = '';
+
+        // Logique spécifique pour le Podcast
+        if (fieldName === 'Podcast RSS Links') {
+            const podcastLink = userRecord.fields[fieldName] || '';
+            const podcastTitle = userRecord.fields['Podcast title'] || '';
+
+            if (podcastLink && podcastTitle) {
+                linksHtml = `
+                    <span class="font-medium text-gray-600">1 lien ajouté</span>
+                    <div class="mt-2 text-xs text-gray-400 space-y-1 break-all">
+                        <span><b>Titre :</b> ${podcastTitle}</span><br/>
+                        <span><b>Lien :</b> ${podcastLink}</span>
+                    </div>`;
+            } else {
+                linksHtml = `<span class="font-medium text-gray-600">0 lien(s) ajouté(s)</span>`;
+            }
+            actionButtonHtml = `<button onclick="clearPodcast()" class="btn btn-secondary text-sm">Vider</button>`;
+
+        // Logique pour les autres types (Article, YouTube)
+        } else {
+            const linksArray = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+            linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
+            if (linksArray.length > 0) {
+                linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-1 break-all">';
+                linksArray.forEach(link => { linksHtml += `<span>${link}</span><br/>`; });
+                linksHtml += '</div>';
+            }
+            actionButtonHtml = `<button onclick="clearLinks('${fieldName}')" class="btn btn-secondary text-sm">Vider</button>`;
+        }
+
         row.innerHTML = `
-            <td class="table-cell font-semibold text-gray-800">${typeName}</td>
+            <td class="table-cell font-semibold">${fieldName.replace('Links', '').replace('RSS', '')}</td>
             <td class="table-cell">${linksHtml}</td>
-            ${fieldName === 'Podcast RSS Links' ? `<td class="table-cell">${titlesHtml}</td>` : ''}
-            <td class="table-cell"><button onclick="clearLinks('${fieldName}')" class="btn btn-secondary text-sm">Vider</button></td>
-        `;
+            <td class="table-cell">${actionButtonHtml}</td>`;
         tableBody.appendChild(row);
     });
 }
@@ -740,8 +701,6 @@ document.getElementById('save-profile-button').addEventListener('click', async (
 </script>
 </body>
 </html>
-
-
 
 
 
