@@ -315,6 +315,32 @@
         }
     }
 
+async function clearLinks(fieldName) {
+    if (!userRecord) return;
+    try {
+        const updatedRecord = await callN8n('clearLinks', {
+            recordId: userRecord.id,
+            fieldName: fieldName
+        });
+        
+        // Gère la réponse "plate" de n8n pour que le dashboard reste à jour
+        if (updatedRecord && updatedRecord.id) {
+             const { id, createdTime, ...fields } = updatedRecord;
+             userRecord = { id, createdTime, fields };
+        } else {
+             userRecord = updatedRecord;
+        }
+
+        // Met à jour tout l'affichage du dashboard
+        showDashboard();
+
+    } catch (error) {
+        alert("Impossible de vider les liens. Erreur : " + error.message);
+    }
+}
+
+
+    
     // --- FONCTIONS D'AFFICHAGE (RESTAURÉES) ---
 
     // <-- FONCTION RESTAURÉE : Gère l'affichage complet du tableau de bord
@@ -465,6 +491,7 @@
 </script>
 </body>
 </html>
+
 
 
 
