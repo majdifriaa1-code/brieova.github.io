@@ -226,7 +226,7 @@
             </div>
         </div>
     </div>
-    <script>
+<script>
     // --- CONFIGURATION FIREBASE ---
     const firebaseConfig = {
        apiKey: "AIzaSyBxt3psNIY8yFbzmSUURXK_Ne5jnagbZTQ",
@@ -246,7 +246,7 @@
     // --- VARIABLES GLOBALES ---
     let userRecord = null;
     let firebaseUser = null;
-    let isProcessingAuth = false; // Un seul drapeau pour gérer toutes les actions
+    let isProcessingAuth = false;
 
     // --- FONCTIONS DE COMMUNICATION N8N ---
     async function callN8n(action, data = {}) {
@@ -259,39 +259,48 @@
         return response.json();
     }
 
-    // NOUVELLE LOGIQUE : Fonction qui cherche UNIQUEMENT un utilisateur
+    // <-- MODIFICATION DÉFINITIVE : Cette fonction est la seule partie qui change.
+    // Elle gère maintenant correctement le cas où n8n renvoie un objet unique.
     async function getUserDataByEmail(email) {
-        const rawResult = await callN8n('findUser', { email }); // Appelle la nouvelle action 'findUser'
+        const rawResult = await callN8n('findUser', { email });
         
-        if (!Array.isArray(rawResult) || rawResult.length === 0) {
+        let potentialRecord = null;
+        // Cas 1 : n8n renvoie un tableau (plusieurs résultats ou recherche vide)
+        if (Array.isArray(rawResult)) {
+            if (rawResult.length > 0) {
+                potentialRecord = rawResult[0];
+            }
+        } 
+        // Cas 2 : n8n renvoie un objet unique (cas de votre capture d'écran)
+        else if (rawResult && typeof rawResult === 'object' && rawResult.id) {
+            potentialRecord = rawResult;
+        }
+
+        // Si, après vérification, nous n'avons aucun enregistrement valide
+        if (!potentialRecord) {
             throw new Error("Utilisateur non trouvé dans la base de données.");
         }
         
-        const potentialRecord = rawResult[0];
-        
-        if (potentialRecord && potentialRecord.id && potentialRecord.fields && potentialRecord.fields.Email) {
+        // Validation finale de l'enregistrement trouvé
+        if (potentialRecord.id && potentialRecord.fields && potentialRecord.fields.Email) {
             userRecord = {
                 id: potentialRecord.id,
                 createdTime: potentialRecord.createdTime,
                 fields: potentialRecord.fields 
             };
         } else {
-            throw new Error("La réponse de la base de données est invalide.");
+            throw new Error("La réponse de la base de données est mal formatée.");
         }
     }
     
-    // NOUVELLE LOGIQUE : Fonction qui crée UNIQUEMENT un utilisateur
     async function createUserData(email) {
-        const newUserRecord = await callN8n('createUser', { email }); // Appelle la nouvelle action 'createUser'
-        
+        const newUserRecord = await callN8n('createUser', { email });
         if (!newUserRecord || !newUserRecord.id) {
             throw new Error("La création du profil a échoué.");
         }
-        // Pas besoin de stocker dans userRecord ici, car l'utilisateur devra se connecter
     }
 
-    // ... (Les autres fonctions comme addLink, showDashboard, etc., restent inchangées) ...
-
+    // ... (Le reste du script est identique au précédent) ...
     function showAuthSection() {
         document.getElementById('auth-section').classList.remove('hidden');
         document.getElementById('dashboard-section').classList.add('hidden');
@@ -307,20 +316,16 @@
         document.getElementById('auth-section').classList.add('hidden');
         document.getElementById('dashboard-section').classList.remove('hidden');
         document.getElementById('user-email').textContent = firebaseUser.email;
-        // ... (le reste de la fonction est inchangé)
     }
 
-    // --- GESTION DE L'ÉTAT D'AUTHENTIFICATION ---
     auth.onAuthStateChanged(async (user) => {
-        if (isProcessingAuth) return; // Ignore si une action manuelle est en cours
-
+        if (isProcessingAuth) return;
         const loadingIndicator = document.getElementById('loading-indicator');
         loadingIndicator.classList.remove('hidden');
-        
         if (user) {
             firebaseUser = user;
             try {
-                await getUserDataByEmail(user.email); // Utilise la nouvelle fonction de recherche
+                await getUserDataByEmail(user.email);
                 showDashboard();
             } catch (error) {
                 console.error("Session invalide, déconnexion forcée:", error);
@@ -332,9 +337,6 @@
         loadingIndicator.classList.add('hidden');
     });
 
-    // --- ÉCOUTEURS D'ÉVÉNEMENTS ---
-
-    // Connexion
     document.getElementById('login-button').addEventListener('click', async () => {
         const email = document.getElementById('auth-email').value.trim();
         const password = document.getElementById('auth-password').value.trim();
@@ -348,7 +350,7 @@
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             firebaseUser = userCredential.user;
-            await getUserDataByEmail(email); // NOUVELLE LOGIQUE : Utilise la fonction de recherche
+            await getUserDataByEmail(email);
             showDashboard();
         } catch (error) {
             let message = "Email ou mot de passe incorrect.";
@@ -363,7 +365,6 @@
         }
     });
 
-    // Inscription
     document.getElementById('signup-modal-submit').addEventListener('click', async () => {
         const email = document.getElementById('signup-modal-email').value.trim();
         const password = document.getElementById('signup-modal-password').value.trim();
@@ -376,7 +377,7 @@
 
         try {
             await auth.createUserWithEmailAndPassword(email, password);
-            await createUserData(email); // NOUVELLE LOGIQUE : Utilise la fonction de création
+            await createUserData(email);
             
             document.getElementById('signup-modal').classList.add('hidden');
             document.getElementById('signup-success-modal').classList.remove('hidden');
@@ -395,7 +396,6 @@
         }
     });
 
-    // ... (Les autres écouteurs pour les modales, etc. restent inchangés) ...
     document.getElementById('show-signup-modal-button').addEventListener('click', () => document.getElementById('signup-modal').classList.remove('hidden'));
     document.getElementById('signup-modal-cancel').addEventListener('click', () => document.getElementById('signup-modal').classList.add('hidden'));
     document.getElementById('signup-success-login-button').addEventListener('click', () => document.getElementById('signup-success-modal').classList.add('hidden'));
@@ -403,4 +403,5 @@
 </script>
 </body>
 </html>
+
 
