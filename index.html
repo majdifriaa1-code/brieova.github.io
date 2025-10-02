@@ -315,29 +315,22 @@
         }
     }
 
-async function clearLinks(fieldName) {
-    if (!userRecord) return;
-    try {
-        const updatedRecord = await callN8n('clearLinks', {
-            recordId: userRecord.id,
-            fieldName: fieldName
-        });
-        
-        // Gère la réponse "plate" de n8n pour que le dashboard reste à jour
-        if (updatedRecord && updatedRecord.id) {
-             const { id, createdTime, ...fields } = updatedRecord;
-             userRecord = { id, createdTime, fields };
-        } else {
-             userRecord = updatedRecord;
+ // Vider les liens d'un champ
+        async function clearLinks(fieldName) {
+            if (!userRecord) return;
+            try {
+                const updatedRecord = await callN8n('clearLinks', {
+                    recordId: userRecord.id,
+                    fieldName: fieldName
+                });
+                userRecord = updatedRecord;
+                updateSourcesTable();
+                updateUsageLimit();
+            } catch (error) {
+                alert("Impossible de vider les liens. Erreur : " + error.message);
+            }
         }
 
-        // Met à jour tout l'affichage du dashboard
-        showDashboard();
-
-    } catch (error) {
-        alert("Impossible de vider les liens. Erreur : " + error.message);
-    }
-}
 
 
     
@@ -491,6 +484,7 @@ async function clearLinks(fieldName) {
 </script>
 </body>
 </html>
+
 
 
 
