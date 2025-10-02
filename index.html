@@ -343,20 +343,30 @@ async function callN8n(action, data = {}) {
 
 async function addPodcast() {
     if (!userRecord) return;
-    const podcastLink = document.getElementById('podcast-link-input').value.trim();
-    const podcastTitle = document.getElementById('podcast-title-input').value.trim();
+    const newLink = document.getElementById('podcast-link-input').value.trim();
+    const newTitle = document.getElementById('podcast-title-input').value.trim();
 
-    if (!podcastLink || !podcastTitle) {
-        alert("Veuillez remplir à la fois le lien et le titre du podcast.");
+    if (!newLink) {
+        alert("Veuillez remplir au moins le lien du podcast.");
         return;
     }
 
+    // Étape 1 : Récupérer et lire la liste actuelle des podcasts
+    let podcasts = [];
     try {
-        // On appelle une nouvelle action 'addPodcast' dans n8n
-        const updatedRecord = await callN8n('addPodcast', {
+        podcasts = JSON.parse(userRecord.fields['Podcast RSS Links'] || '[]');
+    } catch (e) {
+        podcasts = []; // En cas d'erreur, on repart d'une liste vide
+    }
+
+    // Étape 2 : Ajouter le nouveau podcast à la liste
+    podcasts.push({ link: newLink, title: newTitle });
+
+    // Étape 3 : Envoyer la nouvelle liste complète à n8n
+    try {
+        const updatedRecord = await callN8n('updatePodcasts', {
             recordId: userRecord.id,
-            podcastLink: podcastLink,
-            podcastTitle: podcastTitle
+            podcastData: JSON.stringify(podcasts)
         });
         updateLocalUserRecord(updatedRecord);
         document.getElementById('podcast-link-input').value = '';
@@ -371,12 +381,15 @@ async function addPodcast() {
 async function clearPodcast() {
     if (!userRecord) return;
     try {
-        // On appelle une nouvelle action 'clearPodcast'
-        const updatedRecord = await callN8n('clearPodcast', { recordId: userRecord.id });
+        // Pour tout effacer, on envoie simplement une liste vide
+        const updatedRecord = await callN8n('updatePodcasts', {
+            recordId: userRecord.id,
+            podcastData: '[]' 
+        });
         updateLocalUserRecord(updatedRecord);
         showDashboard();
     } catch (error) {
-        alert("Impossible de vider les liens du podcast. Erreur : " + error.message);
+        alert("Impossible de vider les podcasts. Erreur : " + error.message);
     }
 }
     
@@ -396,7 +409,7 @@ async function clearPodcast() {
             }
         }
 
-  function updateSourcesTable() {
+ function updateSourcesTable() {
     if (!userRecord || !userRecord.fields) return;
     const tableBody = document.getElementById('sources-table');
     tableBody.innerHTML = '';
@@ -407,24 +420,28 @@ async function clearPodcast() {
         let linksHtml = '';
         let actionButtonHtml = '';
 
-        // Logique spécifique pour le Podcast
+        // Logique SPÉCIFIQUE pour la nouvelle gestion des Podcasts
         if (fieldName === 'Podcast RSS Links') {
-            const podcastLink = userRecord.fields[fieldName] || '';
-            const podcastTitle = userRecord.fields['Podcast title'] || '';
+            let podcasts = [];
+            try {
+                podcasts = JSON.parse(userRecord.fields[fieldName] || '[]');
+            } catch (e) { /* Gère les données si elles sont invalides */ }
 
-            if (podcastLink && podcastTitle) {
-                linksHtml = `
-                    <span class="font-medium text-gray-600">1 lien ajouté</span>
-                    <div class="mt-2 text-xs text-gray-400 space-y-1 break-all">
-                        <span><b>Titre :</b> ${podcastTitle}</span><br/>
-                        <span><b>Lien :</b> ${podcastLink}</span>
-                    </div>`;
-            } else {
-                linksHtml = `<span class="font-medium text-gray-600">0 lien(s) ajouté(s)</span>`;
+            linksHtml = `<span class="font-medium text-gray-600">${podcasts.length} podcast(s) ajouté(s)</span>`;
+            if (podcasts.length > 0) {
+                linksHtml += '<div class="mt-2 text-xs text-gray-400 space-y-2 break-all">';
+                // On boucle sur chaque podcast pour l'afficher
+                podcasts.forEach(p => {
+                    linksHtml += `<div>
+                                    <span class="font-semibold">${p.title || 'Sans titre'}</span><br/>
+                                    <span>${p.link}</span>
+                                 </div>`;
+                });
+                linksHtml += '</div>';
             }
             actionButtonHtml = `<button onclick="clearPodcast()" class="btn btn-secondary text-sm">Vider</button>`;
 
-        // Logique pour les autres types (Article, YouTube)
+        // Logique GÉNÉRIQUE pour les autres sources
         } else {
             const linksArray = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
             linksHtml = `<span class="font-medium text-gray-600">${linksArray.length} lien(s) ajouté(s)</span>`;
@@ -695,6 +712,7 @@ document.getElementById('save-profile-button').addEventListener('click', async (
 </script>
 </body>
 </html>
+
 
 
 
