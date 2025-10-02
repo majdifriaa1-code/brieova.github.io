@@ -550,14 +550,51 @@
     document.getElementById('cancel-profile-button').addEventListener('click', () => {
         document.getElementById('profile-modal').classList.add('hidden');
     });
-    document.getElementById('save-profile-button').addEventListener('click', async () => {
-        // ... (logique de sauvegarde de profil inchangée)
-    });
+ // LE NOUVEAU CODE CORRECT
+document.getElementById('save-profile-button').addEventListener('click', async () => {
+    const password = document.getElementById('profile-password').value;
+    const confirm = document.getElementById('profile-password-confirm').value;
+    const errorElement = document.getElementById('profile-error');
+    
+    // On cache les anciens messages d'erreur
+    errorElement.classList.add('hidden');
+
+    // On ne fait quelque chose que si un nouveau mot de passe est entré
+    if (password.length > 0) {
+        if (password.length < 6) {
+            errorElement.textContent = "Le mot de passe doit comporter au moins 6 caractères.";
+            errorElement.classList.remove('hidden');
+            return;
+        }
+        if (password !== confirm) {
+            errorElement.textContent = "Les mots de passe ne correspondent pas.";
+            errorElement.classList.remove('hidden');
+            return;
+        }
+        
+        // Si tout est bon, on tente de mettre à jour le mot de passe dans Firebase
+        try {
+            await firebaseUser.updatePassword(password);
+            // On nettoie les champs et on ferme la modale en cas de succès
+            document.getElementById('profile-password').value = '';
+            document.getElementById('profile-password-confirm').value = '';
+            document.getElementById('profile-modal').classList.add('hidden');
+        } catch (error) {
+            // On affiche une erreur si Firebase la rejette (ex: déconnexion récente)
+            errorElement.textContent = "Erreur: " + error.message;
+            errorElement.classList.remove('hidden');
+        }
+    } else {
+        // Si aucun mot de passe n'est entré, on ferme simplement la modale
+        document.getElementById('profile-modal').classList.add('hidden');
+    }
+});
     document.getElementById('logout-button').addEventListener('click', handleLogout);
     document.getElementById('start-debrief-button').addEventListener('click', startDebrief);
 </script>
 </body>
 </html>
+
 
 
 
