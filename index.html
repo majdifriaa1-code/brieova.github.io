@@ -251,20 +251,37 @@
     let isProcessingAuth = false;
 
     // --- FONCTION UTILITAIRE POUR APPELER LE WEBHOOK N8N ---
-    async function callN8n(action, data = {}) {
-        try {
-            const response = await fetch(USER_ACTIONS_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, ...data })
-            });
-            if (!response.ok) throw new Error(`Erreur du serveur n8n: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error("Erreur lors de l'appel au webhook n8n:", error);
-            throw new Error("Une erreur réseau ou serveur est survenue. Veuillez réessayer.");
+  // Remplacez votre fonction callN8n par celle-ci
+async function callN8n(action, data = {}) {
+    try {
+        // 1. On vérifie qu'un utilisateur est bien connecté
+        if (!auth.currentUser) {
+            throw new Error("Action impossible : utilisateur non authentifié.");
         }
+
+        // 2. On demande à Firebase le jeton d'ID pour cet utilisateur
+        const idToken = await auth.currentUser.getIdToken();
+
+        // 3. On envoie la requête à n8n avec le jeton dans l'en-tête
+        const response = await fetch(USER_ACTIONS_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // L'en-tête "Authorization" est la norme pour ce type d'opération
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ action, ...data })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Le serveur a refusé la requête : ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Erreur lors de l'appel sécurisé au webhook:", error);
+        throw new Error("Une erreur réseau ou serveur est survenue.");
     }
+}
 
     // --- MODIFICATION 2 : Remplacement de findUserByEmail par des fonctions plus robustes ---
     function updateLocalUserRecord(recordFromN8n) {
@@ -594,6 +611,7 @@ document.getElementById('save-profile-button').addEventListener('click', async (
 </script>
 </body>
 </html>
+
 
 
 
