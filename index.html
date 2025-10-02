@@ -259,36 +259,34 @@
         return response.json();
     }
 
-    // <-- MODIFICATION DÉFINITIVE : Cette fonction est la seule partie qui change.
-    // Elle gère maintenant correctement le cas où n8n renvoie un objet unique.
+    // <-- MODIFICATION ULTIME : La fonction "universelle" qui comprend tous les formats
     async function getUserDataByEmail(email) {
         const rawResult = await callN8n('findUser', { email });
         
-        let potentialRecord = null;
-        // Cas 1 : n8n renvoie un tableau (plusieurs résultats ou recherche vide)
-        if (Array.isArray(rawResult)) {
-            if (rawResult.length > 0) {
-                potentialRecord = rawResult[0];
-            }
-        } 
-        // Cas 2 : n8n renvoie un objet unique (cas de votre capture d'écran)
-        else if (rawResult && typeof rawResult === 'object' && rawResult.id) {
-            potentialRecord = rawResult;
-        }
+        let potentialRecord = Array.isArray(rawResult) && rawResult.length > 0 ? rawResult[0] : rawResult;
 
-        // Si, après vérification, nous n'avons aucun enregistrement valide
-        if (!potentialRecord) {
-            throw new Error("Utilisateur non trouvé dans la base de données.");
+        if (!potentialRecord || typeof potentialRecord !== 'object' || !potentialRecord.id) {
+            throw new Error("Utilisateur non trouvé ou réponse invalide.");
         }
         
-        // Validation finale de l'enregistrement trouvé
-        if (potentialRecord.id && potentialRecord.fields && potentialRecord.fields.Email) {
+        // Logique "universelle" : gère le format imbriqué ET le format plat
+        if (potentialRecord.fields && potentialRecord.fields.Email) {
+            // CAS 1 : Format standard avec sous-dossier "fields"
             userRecord = {
                 id: potentialRecord.id,
                 createdTime: potentialRecord.createdTime,
                 fields: potentialRecord.fields 
             };
+        } else if (potentialRecord.Email) {
+            // CAS 2 : Format "plat" (sans le sous-dossier "fields")
+            const { id, createdTime, ...fields } = potentialRecord;
+            userRecord = {
+                id: id,
+                createdTime: createdTime,
+                fields: fields // On reconstruit un objet "fields"
+            };
         } else {
+            // Si aucun des formats n'est reconnu
             throw new Error("La réponse de la base de données est mal formatée.");
         }
     }
@@ -300,7 +298,7 @@
         }
     }
 
-    // ... (Le reste du script est identique au précédent) ...
+    // ... (Le reste du script est identique et correct) ...
     function showAuthSection() {
         document.getElementById('auth-section').classList.remove('hidden');
         document.getElementById('dashboard-section').classList.add('hidden');
@@ -354,7 +352,7 @@
             showDashboard();
         } catch (error) {
             let message = "Email ou mot de passe incorrect.";
-            if (error.message.includes("base de données")) {
+            if (error.message.includes("base de données") || error.message.includes("trouvé")) {
                 message = "Erreur de connexion à la base de données.";
             }
             errorElement.textContent = message;
@@ -403,5 +401,6 @@
 </script>
 </body>
 </html>
+
 
 
