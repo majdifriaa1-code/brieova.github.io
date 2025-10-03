@@ -199,6 +199,41 @@
                 </div>
             </div>
 
+<div class="card bg-blue-50 border border-blue-200 shadow-md">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Comment ajouter un podcast Spotify ?</h3>
+            <p class="text-sm text-gray-700 mb-3">Pour ajouter un podcast Spotify, veuillez suivre ces 2 règles :</p>
+            <ul class="list-disc list-inside space-y-2 text-sm text-gray-600">
+                <li>Ajoutez le lien de la chaîne du podcast dans le site ci-dessous, puis cliquez sur "Find RSS Feed". Copiez le lien généré et collez-le dans notre champ "Collez le lien du podcast".</li>
+                <li>Utilisez exactement le même nom d'épisode de podcast que celui qui apparaît sur Spotify. Si vous n'utilisez pas le nom correct, le système ne reconnaîtra pas le podcast.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="text-xl font-semibold text-gray-700 mb-4">Outil de recherche de flux RSS</h3>
+    <div class="w-full h-[500px] border border-gray-200 rounded-lg overflow-hidden">
+        <iframe 
+            src="https://www.get-rss.com/" 
+            class="w-full h-full" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy" 
+            title="Outil Get RSS">
+        </iframe>
+    </div>
+</div>
+
+
+
+            
             <div class="card">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-4">Vos Sources Actuelles</h2>
                 <table class="w-full text-left">
@@ -681,6 +716,7 @@ async function addLink(fieldName, inputId) {
 </script>
 </body>
 </html>
+
 
 
 
