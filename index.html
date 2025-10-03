@@ -300,23 +300,43 @@
     }
 
     // --- FONCTIONS DU DASHBOARD ---
-    async function addLink(fieldName, inputId) {
-        if (!userRecord) return;
-        const inputElement = document.getElementById(inputId);
-        const newLinks = inputElement.value.trim();
-        if (!newLinks) return;
-        const existingLinks = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
-        const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
-        const allLinks = [...new Set([...existingLinks, ...newLinksArray])].join(',');
-        try {
-            const updatedRecord = await callN8n('addLink', { recordId: userRecord.id, fieldName: fieldName, allLinks: allLinks });
-            updateLocalUserRecord(updatedRecord);
-            inputElement.value = '';
-            showDashboard();
-        } catch (error) {
-            alert("Impossible de sauvegarder le lien: " + error.message);
+async function addLink(fieldName, inputId) {
+    if (!userRecord) return;
+    const inputElement = document.getElementById(inputId);
+    const newLinks = inputElement.value.trim();
+    if (!newLinks) return;
+
+    // --- DÉBUT DE LA VALIDATION YOUTUBE ---
+    // Cette vérification ne s'applique que pour le champ YouTube
+    if (fieldName === 'YouTube Links') {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+        
+        // On sépare les liens pour les tester un par un
+        const linksToTest = newLinks.split(',').map(s => s.trim()).filter(Boolean);
+
+        // On vérifie si CHAQUE lien est bien un lien YouTube
+        const allLinksAreValid = linksToTest.every(link => youtubeRegex.test(link));
+
+        if (!allLinksAreValid) {
+            alert("Veuillez n'entrer que des liens YouTube valides, séparés par une virgule.");
+            return; // On arrête la fonction si un des liens est invalide
         }
     }
+    // --- FIN DE LA VALIDATION YOUTUBE ---
+
+    const existingLinks = userRecord.fields[fieldName] ? String(userRecord.fields[fieldName]).split(',').filter(Boolean) : [];
+    const newLinksArray = newLinks.split(',').map(s => s.trim()).filter(Boolean);
+    const allLinks = [...new Set([...existing-links, ...newLinksArray])].join(',');
+
+    try {
+        const updatedRecord = await callN8n('addLink', { recordId: userRecord.id, fieldName: fieldName, allLinks: allLinks });
+        updateLocalUserRecord(updatedRecord);
+        inputElement.value = '';
+        showDashboard();
+    } catch (error) {
+        alert("Impossible de sauvegarder le lien: " + error.message);
+    }
+}
 
     async function addPodcast() {
         if (!userRecord) return;
@@ -617,3 +637,4 @@
 </script>
 </body>
 </html>
+
