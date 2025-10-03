@@ -308,7 +308,7 @@ async function addLink(fieldName, inputId) {
 
     // --- VALIDATION YOUTUBE (INCHANGÉE ET CORRECTE) ---
     if (fieldName === 'YouTube Links') {
-        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+        const youtubeRegex = /^(https?:\/\/)?((www|m)\.)?(youtube\.com|youtu\.be)\/.+$/;
         const linksToTest = newLinks.split(',').map(s => s.trim()).filter(Boolean);
         const allLinksAreValid = linksToTest.every(link => youtubeRegex.test(link));
 
@@ -634,5 +634,6 @@ async function addLink(fieldName, inputId) {
 </script>
 </body>
 </html>
+
 
 
