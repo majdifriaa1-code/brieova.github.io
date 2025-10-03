@@ -144,7 +144,7 @@
                     </div>
                     <div class="flex flex-col items-center md:items-start text-center md:text-left">
                         <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Votre Dashboard</h2>
-                        <span id="user-email" class="font-medium text-gray-600 text-sm md:text-base"></span>
+                        <span id="user-display-name" class="font-medium text-gray-600 text-sm md:text-base"></span>
                     </div>
                 </div>
                 <div class="user-panel">
@@ -493,16 +493,17 @@ async function addLink(fieldName, inputId) {
 }
 
     // --- FONCTIONS D'AFFICHAGE ---
-  function showDashboard() {
+function showDashboard() {
     if (!userRecord || !userRecord.fields || !firebaseUser) { handleLogout(); return; }
     document.getElementById('auth-section').classList.add('hidden');
     document.getElementById('dashboard-section').classList.remove('hidden');
-    document.getElementById('user-email').textContent = firebaseUser.email;
 
-    // --- AJOUT : Remplir le champ du profil utilisateur ---
-    const persona = userRecord.fields['User Persona (AI)'] || '';
-    document.getElementById('user-persona-input').value = persona;
-    // --- FIN DE L'AJOUT ---
+    // --- MODIFICATION ---
+    // On récupère le nom depuis Airtable. S'il n'existe pas, on utilise l'email par défaut.
+    const displayName = userRecord.fields.Name || firebaseUser.email;
+    // On met à jour l'élément avec le nouvel ID.
+    document.getElementById('user-display-name').textContent = displayName;
+    // --- FIN DE LA MODIFICATION ---
 
     const userStatusElement = document.getElementById('user-status');
     const status = userRecord.fields.Status || 'Inconnu';
@@ -511,6 +512,7 @@ async function addLink(fieldName, inputId) {
     else if (status === 'Premium') { statusColorClass = 'bg-yellow-100 text-yellow-800'; }
     userStatusElement.className = `status-badge ${statusColorClass}`;
     userStatusElement.textContent = status;
+
     const debriefsRemainingElement = document.getElementById('debriefs-remaining');
     const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
     let debriefsColorClass = 'bg-green-100 text-green-800';
@@ -518,6 +520,10 @@ async function addLink(fieldName, inputId) {
     else if (remaining <= 2) { debriefsColorClass = 'bg-yellow-100 text-yellow-800'; }
     debriefsRemainingElement.className = `status-badge ${debriefsColorClass}`;
     debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
+    
+    const persona = userRecord.fields['User Persona (AI)'] || '';
+    document.getElementById('user-persona-input').value = persona;
+
     updateSourcesTable();
     updateUsageLimit();
 }
@@ -717,6 +723,7 @@ async function addLink(fieldName, inputId) {
 </script>
 </body>
 </html>
+
 
 
 
