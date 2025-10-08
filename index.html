@@ -528,19 +528,28 @@ function showDashboard() {
     document.getElementById('user-display-name').textContent = displayName;
 
     const userStatusElement = document.getElementById('user-status');
-    const status = userRecord.fields.Status || 'Free'; // J'ai remplacé 'Inconnu' par 'Free' par défaut
+    const status = userRecord.fields.Status || 'Free';
     let statusColorClass = 'bg-gray-100 text-gray-800';
     if (status === 'Premium') { statusColorClass = 'bg-yellow-100 text-yellow-800'; }
     userStatusElement.className = `status-badge ${statusColorClass}`;
     userStatusElement.textContent = status;
 
+    // --- MODIFICATION : GESTION DE L'AFFICHAGE DU BADGE DES DÉBRIEFS ---
     const debriefsRemainingElement = document.getElementById('debriefs-remaining');
-    const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
-    let debriefsColorClass = 'bg-green-100 text-green-800';
-    if (remaining <= 0) { debriefsColorClass = 'bg-red-100 text-red-800'; } 
-    else if (remaining <= 2) { debriefsColorClass = 'bg-yellow-100 text-yellow-800'; }
-    debriefsRemainingElement.className = `status-badge ${debriefsColorClass}`;
-    debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
+    if (status === 'Premium') {
+        // Si l'utilisateur est Premium, on cache le badge
+        debriefsRemainingElement.classList.add('hidden');
+    } else {
+        // Sinon, on l'affiche et on met à jour le compteur
+        debriefsRemainingElement.classList.remove('hidden');
+        const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
+        let debriefsColorClass = 'bg-green-100 text-green-800';
+        if (remaining <= 0) { debriefsColorClass = 'bg-red-100 text-red-800'; } 
+        else if (remaining <= 2) { debriefsColorClass = 'bg-yellow-100 text-yellow-800'; }
+        debriefsRemainingElement.className = `status-badge ${debriefsColorClass}`;
+        debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
+    }
+    // --- FIN DE LA MODIFICATION ---
     
     const persona = userRecord.fields['User Persona (AI)'] || '';
     document.getElementById('user-persona-input').value = persona;
@@ -548,21 +557,15 @@ function showDashboard() {
     updateSourcesTable();
     updateUsageLimit();
 
-    // --- BLOC DE CODE MANQUANT À RAJOUTER ---
-    // Cette partie gère l'affichage des boutons d'abonnement
     const upgradeButton = document.getElementById('upgrade-button');
     const cancelButton = document.getElementById('cancel-premium-button');
-
     if (status === 'Premium') {
-        // Si l'utilisateur est Premium, on affiche le bouton d'annulation
         upgradeButton.classList.add('hidden');
         cancelButton.classList.remove('hidden');
     } else {
-        // Sinon (s'il est "Free"), on affiche le bouton de mise à niveau
         upgradeButton.classList.remove('hidden');
         cancelButton.classList.add('hidden');
     }
-    // --- FIN DU BLOC MANQUANT ---
 }
 
     function updateSourcesTable() {
@@ -813,6 +816,7 @@ document.getElementById('confirm-cancel-subscription-button').addEventListener('
     
 </body>
 </html>
+
 
 
 
