@@ -24,7 +24,7 @@
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
         .modal-content { background-color: white; padding: 2rem; border-radius: 16px; text-align: center; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
         .user-panel { background-color: white; border-radius: 16px; padding: 1rem; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
-        .user-panel a, .user-panel button { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #4a5568; text-decoration: none; padding: 0.5rem 1rem; border-radius: 9999px; transition: all 0.2s ease-in-out; background-color: transparent; border: 1px solid #e2e8f0; }
+        .user-panel a:not(.hidden), .user-panel button:not(.hidden) { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #4a5568; text-decoration: none; padding: 0.5rem 1rem; border-radius: 9999px; transition: all 0.2s ease-in-out; background-color: transparent; border: 1px solid #e2e8f0; }
         .user-panel a:hover, .user-panel button:hover { background-color: #f1f5f9; border-color: #cbd5e0; }
         .user-panel .btn-primary { background-color: #4a90e2; color: white; border: none; }
         .user-panel .btn-primary:hover { background-color: #357abd; }
@@ -156,13 +156,13 @@
                     </button>
                     <div id="user-status" class="status-badge bg-gray-100 text-gray-800"></div>
                     <div id="debriefs-remaining" class="status-badge bg-green-100 text-green-800"></div>
-                  
+                   <button id="upgrade-button" class="btn btn-primary hidden">Passer Premium</button>
+                   <button id="cancel-premium-button" class="btn btn-danger hidden">Annuler l'abonnement</button>
                     <button id="logout-button" class="btn-danger flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 6v-6" /></svg> Déconnexion
                     </button>
                 </div>
-                <button id="upgrade-button" class="btn btn-primary hidden">Passer Premium</button>
-                   <button id="cancel-premium-button" class="btn btn-danger hidden">Annuler l'abonnement</button>
+               
             </div>
 <div class="card">
     <h3 class="text-xl font-semibold text-gray-700 mb-2">Décrivez votre profil pour l'IA</h3>
@@ -779,6 +779,7 @@ document.getElementById('cancel-premium-button').addEventListener('click', async
 </script>
 </body>
 </html>
+
 
 
 
