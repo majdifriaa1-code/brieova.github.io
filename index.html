@@ -504,18 +504,28 @@ function showDashboard() {
     document.getElementById('user-display-name').textContent = displayName;
 
     const userStatusElement = document.getElementById('user-status');
-    const status = userRecord.fields.Status || 'Inconnu';
+    const status = userRecord.fields.Status || 'Free'; // J'ai remplacé 'Inconnu' par 'Free' par défaut
     let statusColorClass = 'bg-gray-100 text-gray-800';
     if (status === 'Premium') { statusColorClass = 'bg-yellow-100 text-yellow-800'; }
     userStatusElement.className = `status-badge ${statusColorClass}`;
     userStatusElement.textContent = status;
 
-    // ... (le reste de la fonction pour les débriefs, le persona, etc. reste identique)
+    const debriefsRemainingElement = document.getElementById('debriefs-remaining');
+    const remaining = parseInt(userRecord.fields['Debriefs Restants']) || 0;
+    let debriefsColorClass = 'bg-green-100 text-green-800';
+    if (remaining <= 0) { debriefsColorClass = 'bg-red-100 text-red-800'; } 
+    else if (remaining <= 2) { debriefsColorClass = 'bg-yellow-100 text-yellow-800'; }
+    debriefsRemainingElement.className = `status-badge ${debriefsColorClass}`;
+    debriefsRemainingElement.textContent = `Debriefs: ${remaining}`;
+    
+    const persona = userRecord.fields['User Persona (AI)'] || '';
+    document.getElementById('user-persona-input').value = persona;
 
     updateSourcesTable();
     updateUsageLimit();
 
-    // --- AJOUT : GESTION DE L'AFFICHAGE DES BOUTONS D'ABONNEMENT ---
+    // --- BLOC DE CODE MANQUANT À RAJOUTER ---
+    // Cette partie gère l'affichage des boutons d'abonnement
     const upgradeButton = document.getElementById('upgrade-button');
     const cancelButton = document.getElementById('cancel-premium-button');
 
@@ -524,10 +534,11 @@ function showDashboard() {
         upgradeButton.classList.add('hidden');
         cancelButton.classList.remove('hidden');
     } else {
-        // Sinon (s'il est "Free" ou autre), on affiche le bouton de mise à niveau
+        // Sinon (s'il est "Free"), on affiche le bouton de mise à niveau
         upgradeButton.classList.remove('hidden');
         cancelButton.classList.add('hidden');
     }
+    // --- FIN DU BLOC MANQUANT ---
 }
 
     function updateSourcesTable() {
@@ -767,6 +778,7 @@ document.getElementById('cancel-premium-button').addEventListener('click', async
 </script>
 </body>
 </html>
+
 
 
 
