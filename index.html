@@ -156,6 +156,7 @@
                     </button>
                     <div id="user-status" class="status-badge bg-gray-100 text-gray-800"></div>
                     <div id="debriefs-remaining" class="status-badge bg-green-100 text-green-800"></div>
+                    <button id="upgrade-button" class="btn btn-primary">Passer Premium</button>
                     <button id="logout-button" class="btn-danger flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 6v-6" /></svg> Déconnexion
                     </button>
@@ -243,7 +244,7 @@
                 </table>
             </div>
             <div class="text-center">
-                <button id="start-debrief-button" class="btn btn-primary text-lg">Lancer le Débrief</button>
+                <button id="start-debrief-button" class="btn btn-primary text-lg">Start the Debrief</button>
                 <p id="usage-limit" class="text-gray-500 text-sm mt-4"></p>
             </div>
         
@@ -720,9 +721,26 @@ function showDashboard() {
 
     document.getElementById('logout-button').addEventListener('click', handleLogout);
     document.getElementById('start-debrief-button').addEventListener('click', startDebrief);
+document.getElementById('upgrade-button').addEventListener('click', async () => {
+    if (!userRecord) return;
+    try {
+        // On appelle n8n pour créer la session de paiement
+        const session = await callN8n('createCheckoutSession', { recordId: userRecord.id });
+        if (session.url) {
+            // On redirige l'utilisateur vers la page de paiement Stripe
+            window.location.href = session.url;
+        }
+    } catch (error) {
+        alert("Erreur lors de la création de la session de paiement : " + error.message);
+    }
+});
+
+
+    
 </script>
 </body>
 </html>
+
 
 
 
