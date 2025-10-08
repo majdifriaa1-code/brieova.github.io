@@ -788,27 +788,31 @@ document.getElementById('cancel-cancel-subscription-button').addEventListener('c
 document.getElementById('confirm-cancel-subscription-button').addEventListener('click', async () => {
     if (!userRecord) return;
 
-    // On ferme la modale
+    // On ferme la modale de confirmation
     document.getElementById('cancel-confirm-modal').classList.add('hidden');
 
     try {
-        // On indique à l'utilisateur que l'action est en cours...
-        const cancelButton = document.getElementById('cancel-premium-button');
-        cancelButton.disabled = true;
-        cancelButton.textContent = 'Annulation en cours...';
+        // On met à jour le bouton principal pour montrer que l'action est en cours
+        const mainCancelButton = document.getElementById('cancel-premium-button');
+        mainCancelButton.disabled = true;
+        mainCancelButton.textContent = 'Annulation en cours...';
 
-        // ...et on exécute la logique d'annulation que nous avions déjà
-        const updatedRecord = await callN8n('cancelSubscription', { recordId: userRecord.id });
+        // On appelle la logique d'annulation sur le serveur
+        await callN8n('cancelSubscription', { recordId: userRecord.id });
         
-        updateLocalUserRecord(updatedRecord);
-        showDashboard();
+        // --- MODIFICATION ---
+        // Une fois l'annulation réussie, on recharge simplement la page.
+        // Le processus de chargement initial s'occupera de ré-afficher le bon état (statut "Free", etc.).
+        location.reload();
 
     } catch (error) {
         alert("Une erreur est survenue lors de l'annulation : " + error.message);
-        // On réactive le bouton en cas d'erreur
-        const cancelButton = document.getElementById('cancel-premium-button');
-        cancelButton.disabled = false;
-        cancelButton.textContent = 'Annuler l\'abonnement';
+        // En cas d'erreur, on réactive le bouton pour permettre une nouvelle tentative
+        const mainCancelButton = document.getElementById('cancel-premium-button');
+        if (mainCancelButton) {
+            mainCancelButton.disabled = false;
+            mainCancelButton.textContent = 'Annuler l\'abonnement';
+        }
     }
 });
     
@@ -816,6 +820,7 @@ document.getElementById('confirm-cancel-subscription-button').addEventListener('
     
 </body>
 </html>
+
 
 
 
