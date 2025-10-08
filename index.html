@@ -736,11 +736,38 @@ document.getElementById('upgrade-button').addEventListener('click', async () => 
     }
 });
 
+document.getElementById('cancel-premium-button').addEventListener('click', async () => {
+    if (!userRecord) return;
 
+    // On demande une confirmation à l'utilisateur
+    if (!confirm("Êtes-vous sûr de vouloir annuler votre abonnement ? Cette action est immédiate.")) {
+        return; // L'utilisateur a cliqué sur "Annuler"
+    }
+
+    try {
+        // On désactive le bouton pour éviter les double-clics
+        document.getElementById('cancel-premium-button').disabled = true;
+        document.getElementById('cancel-premium-button').textContent = 'Annulation en cours...';
+
+        // On appelle la nouvelle action n8n
+        const updatedRecord = await callN8n('cancelSubscription', { recordId: userRecord.id });
+        
+        // On met à jour les données locales et on rafraîchit l'affichage
+        updateLocalUserRecord(updatedRecord);
+        showDashboard();
+
+    } catch (error) {
+        alert("Une erreur est survenue lors de l'annulation : " + error.message);
+        // On réactive le bouton en cas d'erreur
+        document.getElementById('cancel-premium-button').disabled = false;
+        document.getElementById('cancel-premium-button').textContent = 'Annuler l\'abonnement';
+    }
+});
     
 </script>
 </body>
 </html>
+
 
 
 
