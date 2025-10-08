@@ -625,13 +625,20 @@ function showDashboard() {
         }
     }
 
-    async function handleLogout() {
+async function handleLogout() {
+    try {
         await auth.signOut();
         firebaseUser = null;
         userRecord = null;
-        document.getElementById('auth-section').classList.remove('hidden');
-        document.getElementById('dashboard-section').classList.add('hidden');
+
+        // MODIFICATION : On remplace le changement de vue par une actualisation de la page.
+        location.reload();
+
+    } catch (error) {
+        console.error("Erreur lors de la déconnexion:", error);
+        alert("Impossible de se déconnecter. Veuillez réessayer.");
     }
+}
     
     // --- GESTION DE L'ÉTAT ET ÉVÉNEMENTS ---
     auth.onAuthStateChanged(async (user) => {
@@ -652,27 +659,29 @@ function showDashboard() {
     });
 
     // Écouteurs d'événements pour l'authentification
-    document.getElementById('login-button').addEventListener('click', async () => {
-        const email = document.getElementById('auth-email').value.trim();
-        const password = document.getElementById('auth-password').value.trim();
-        const errorElement = document.getElementById('auth-error');
-        const loginButton = document.getElementById('login-button');
-        errorElement.classList.add('hidden');
-        loginButton.disabled = true;
-        isProcessingAuth = true;
-        try {
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            firebaseUser = userCredential.user;
-            await getUserDataByEmail(email);
-            showDashboard();
-        } catch (error) {
-            errorElement.textContent = "Email, mot de passe ou connexion base de données incorrect.";
-            errorElement.classList.remove('hidden');
-        } finally {
-            loginButton.disabled = false;
-            isProcessingAuth = false;
-        }
-    });
+document.getElementById('login-button').addEventListener('click', async () => {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    const errorElement = document.getElementById('auth-error');
+    const loginButton = document.getElementById('login-button');
+    
+    errorElement.classList.add('hidden');
+    loginButton.disabled = true;
+    isProcessingAuth = true;
+    
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        
+        // MODIFICATION : On remplace l'affichage direct par une actualisation de la page.
+        location.reload();
+
+    } catch (error) {
+        errorElement.textContent = "Email ou mot de passe incorrect.";
+        errorElement.classList.remove('hidden');
+        loginButton.disabled = false;
+        isProcessingAuth = false;
+    }
+});
 
     document.getElementById('signup-modal-submit').addEventListener('click', async () => {
         const email = document.getElementById('signup-modal-email').value.trim();
@@ -820,6 +829,7 @@ document.getElementById('confirm-cancel-subscription-button').addEventListener('
     
 </body>
 </html>
+
 
 
 
