@@ -26,10 +26,10 @@
         .user-panel { background-color: white; border-radius: 16px; padding: 1rem; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
         .user-panel a:not(.hidden), .user-panel button:not(.hidden) { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #4a5568; text-decoration: none; padding: 0.5rem 1rem; border-radius: 9999px; transition: all 0.2s ease-in-out; background-color: transparent; border: 1px solid #e2e8f0; }
         .user-panel a:hover, .user-panel button:hover { background-color: #f1f5f9; border-color: #cbd5e0; }
-        .user-panel .btn-primary { background-color: #4a90e2; color: white; border: none; }
-        .user-panel .btn-primary:hover { background-color: #357abd; }
-        .user-panel .btn-danger { background-color: #ef4444; color: white; border: none; }
-        .user-panel .btn-danger:hover { background-color: #dc2626; }
+        .user-panel button.btn-primary { background-color: #4a90e2; color: white; border: none; }
+        .user-panel button.btn-primary:hover { background-color: #357abd; }
+        .user-panel button.btn-danger { background-color: #ef4444; color: white; border: none; }
+        .user-panel button.btn-danger:hover { background-color: #dc2626; }
         .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
         .loader { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #ffffff; z-index: 100; align-items: center; justify-content: center; }
         .loader-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #4a90e2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
@@ -829,6 +829,7 @@ document.getElementById('confirm-cancel-subscription-button').addEventListener('
     
 </body>
 </html>
+
 
 
 
