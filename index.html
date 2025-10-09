@@ -306,7 +306,47 @@
     </div>
 </div>
 
-
+<div id="premium-modal" class="modal-overlay hidden">
+    <div class="modal-content text-left max-w-lg">
+        <button id="close-premium-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">&times;</button>
+        
+        <h2 class="text-2xl font-bold text-gray-900">Premium</h2>
+        <p class="mt-1 text-gray-500">Advanced tools and deeper insights.</p>
+        
+        <hr class="my-6">
+        
+        <div class="flex items-baseline">
+            <span class="text-5xl font-bold text-gray-900">$9</span>
+            <span class="ml-1 text-xl text-gray-500">/mo</span>
+        </div>
+        <p class="text-sm text-gray-500">or $90 yearly</p>
+        
+        <button id="confirm-upgrade-button" class="btn btn-primary w-full mt-6 text-base">Upgrade</button>
+        
+        <ul class="mt-6 space-y-3">
+            <li class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-gray-600">Includes all free features</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-gray-600">Cross-source synthesis</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-gray-600">Mind map visualizations</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-gray-600">Priority support</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span class="text-gray-600">Early access to features</span>
+            </li>
+        </ul>
+    </div>
+</div>
     
 <script>
     // --- CONFIGURATION FIREBASE ---
@@ -769,17 +809,35 @@ document.getElementById('login-button').addEventListener('click', async () => {
 
     document.getElementById('logout-button').addEventListener('click', handleLogout);
     document.getElementById('start-debrief-button').addEventListener('click', startDebrief);
-document.getElementById('upgrade-button').addEventListener('click', async () => {
+// 1. Quand on clique sur le bouton principal "Passer Premium", on OUVRE la modale
+document.getElementById('upgrade-button').addEventListener('click', () => {
+    document.getElementById('premium-modal').classList.remove('hidden');
+});
+
+// 2. Quand on clique sur la croix pour fermer, on FERME la modale
+document.getElementById('close-premium-modal').addEventListener('click', () => {
+    document.getElementById('premium-modal').classList.add('hidden');
+});
+
+// 3. Quand on clique sur "Upgrade" dans la modale, on LANCE LE PAIEMENT
+document.getElementById('confirm-upgrade-button').addEventListener('click', async () => {
     if (!userRecord) return;
+    
+    // On peut ajouter un effet de chargement sur le bouton
+    const upgradeButton = document.getElementById('confirm-upgrade-button');
+    upgradeButton.disabled = true;
+    upgradeButton.textContent = 'Redirecting to payment...';
+
     try {
-        // On appelle n8n pour créer la session de paiement
+        // Logique de paiement que nous avions déjà
         const session = await callN8n('createCheckoutSession', { recordId: userRecord.id });
         if (session.url) {
-            // On redirige l'utilisateur vers la page de paiement Stripe
             window.location.href = session.url;
         }
     } catch (error) {
-        alert("Erreur lors de la création de la session de paiement : " + error.message);
+        alert("Error creating payment session: " + error.message);
+        upgradeButton.disabled = false;
+        upgradeButton.textContent = 'Upgrade';
     }
 });
 
@@ -829,6 +887,7 @@ document.getElementById('confirm-cancel-subscription-button').addEventListener('
     
 </body>
 </html>
+
 
 
 
