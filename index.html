@@ -51,7 +51,7 @@
 .profile-nav-item {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1.5rem;
     font-weight: 500;
     color: #6b7280; /* gray-500 */
     cursor: pointer;
@@ -299,7 +299,10 @@
    <div id="profile-modal" class="modal-overlay hidden">
     <div class="modal-content max-w-4xl flex" style="min-height: 400px;">
         <div class="w-1/4 bg-gray-50 border-r border-gray-200 py-6">
-            <div class="px-4 mb-6 text-sm text-gray-700 font-semibold" id="profile-modal-user-email"></div>
+         <div class="px-6 mb-6">
+    <h3 id="profile-modal-user-name" class="font-bold text-lg text-gray-800 truncate"></h3>
+    <p class="text-sm text-gray-500">Paramètres du compte</p>
+</div>
             <nav>
                 <a href="#" id="profile-tab-btn" class="profile-nav-item active">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -972,12 +975,15 @@ document.getElementById('update-password-button').addEventListener('click', asyn
    document.getElementById('open-profile-modal').addEventListener('click', () => {
     if (!userRecord || !firebaseUser) return;
 
-    // Remplir les champs du profil
-    document.getElementById('profile-name').value = userRecord.fields.Name || '';
-    document.getElementById('profile-email').value = firebaseUser.email; // L'email de Firebase est toujours fiable
-    document.getElementById('profile-modal-user-email').textContent = firebaseUser.email; // Email dans le sidebar
+    // --- MODIFICATION ---
+    // On affiche le nom de l'utilisateur (ou son email par défaut) dans le nouvel élément
+    document.getElementById('profile-modal-user-name').textContent = userRecord.fields.Name || firebaseUser.email;
+    // --- FIN DE LA MODIFICATION ---
 
-    // Remplir la section Plans
+    // Le reste de la fonction est inchangé
+    document.getElementById('profile-name').value = userRecord.fields.Name || '';
+    document.getElementById('profile-email').value = firebaseUser.email;
+
     const status = userRecord.fields.Status || 'Free';
     document.getElementById('plan-status-display').textContent = status;
     if (status === 'Premium') {
@@ -987,10 +993,14 @@ document.getElementById('update-password-button').addEventListener('click', asyn
         document.getElementById('plans-upgrade-section').classList.remove('hidden');
         document.getElementById('plans-cancel-section').classList.add('hidden');
     }
+    
+    document.getElementById('security-new-password').value = '';
+    document.getElementById('security-confirm-password').value = '';
+    document.getElementById('security-error-message').classList.add('hidden');
+    document.getElementById('security-success-message').classList.add('hidden');
 
-    // Afficher la modale et l'onglet par défaut (Profil)
     document.getElementById('profile-modal').classList.remove('hidden');
-    showTab('profile'); // Afficher l'onglet 'Profil' par défaut
+    showTab('profile');
 });
 
 document.getElementById('plans-upgrade-button').addEventListener('click', () => {
@@ -1123,6 +1133,7 @@ document.getElementById('confirm-cancel-subscription-button').addEventListener('
     
 </body>
 </html>
+
 
 
 
