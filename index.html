@@ -271,7 +271,9 @@
     </div>
 </div>
 
-
+<div id="toast-notification" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg hidden transition-opacity duration-300">
+    <p id="toast-message"></p>
+</div>
 
             
             <div class="card">
@@ -800,7 +802,21 @@ async function handleLogout() {
         alert("Impossible de se déconnecter. Veuillez réessayer.");
     }
 }
+
+function showNotification(message) {
+    const toast = document.getElementById('toast-notification');
+    const messageElement = document.getElementById('toast-message');
     
+    messageElement.textContent = message;
+    toast.classList.remove('hidden');
+    
+    // Cacher la notification automatiquement après 3 secondes
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
+}
+
+
     // --- GESTION DE L'ÉTAT ET ÉVÉNEMENTS ---
     auth.onAuthStateChanged(async (user) => {
         if (isProcessingAuth) return;
@@ -1107,6 +1123,7 @@ document.getElementById('confirm-cancel-subscription-button').addEventListener('
     
 </body>
 </html>
+
 
 
 
